@@ -74,3 +74,18 @@ test('invalid success JSON is a recoverable error', async () => {
   global.fetch = async () => new Response('<html>Proxy</html>');
   await assert.rejects(request('https://example.test'), /invalid response/);
 });
+
+test('multipart upload preserves the body and lets fetch set the boundary', async () => {
+  const form = new FormData();
+  form.append('file', new Blob(['A fact'], { type: 'text/plain' }), 'fact.txt');
+  let calls = 0;
+  global.fetch = async (url, options) => {
+    calls++;
+    assert.equal(options.body, form);
+    assert.equal(options.headers['Content-Type'], undefined);
+    assert.equal(options.headers.Authorization, 'Token valid');
+    return json({ id: 1 }, 201);
+  };
+  assert.deepEqual(await request('https://example.test', { token: 'valid', method: 'POST', body: form, multipart: true }), { id: 1 });
+  assert.equal(calls, 1);
+});

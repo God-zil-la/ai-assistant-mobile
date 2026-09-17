@@ -19,9 +19,11 @@ import {
   loginUser,
 } from '../services/authService';
 import { saveAuthSession } from '../services/tokenService';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function LoginScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -126,7 +128,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -181,7 +183,9 @@ const styles = StyleSheet.create({
 
   button: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
@@ -193,7 +197,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },

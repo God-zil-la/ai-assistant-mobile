@@ -30,36 +30,21 @@ platform-specific integration.
 Platform-specific release work such as StoreKit, Google Play Billing,
 TestFlight, signing and store metadata remains platform-specific.
 
-## Current mobile release scope
+## Current parity scope (2026-09-17)
 
-The goal for the first shared mobile release is feature parity with the
-currently approved mobile product scope, not implementation of every future
-web feature.
+The current task supersedes the earlier restricted preview scope. Existing web
+Knowledge Base and the two existing Analytics charts are in scope now; no KB 2.0,
+image upload, expanded analytics, new store billing, or Stripe refactor is included.
+See PARITY-MATRIX.md for source mapping, implementation status, verification and gaps.
 
-Knowledge Base expansion, image upload, richer file handling and expanded
-usage/analytics are planned as later shared Android + iOS improvements.
-They are not blockers for the current mobile release scope.
+The shared native app now contains document Knowledge management, usage Dashboard,
+Analytics and persistent light/dark theme. The new token-authenticated Django
+adapters require a separately reviewed backend deployment before use with production.
+Billing, Discord setup/download, password recovery and account deletion use the
+existing secure website with browser sign-in. These handoffs are not native screens.
 
-Do not implement a feature only for iOS or only for Android merely to move one
-platform ahead of the other. Product improvements should be planned as shared
-mobile releases whenever practical.
-
-## Functionality
-
-| Area | Current shared mobile state | Release scope / remaining work |
-| --- | --- | --- |
-| Register, login, logout, email verification | Implemented | Verify on physical devices and store builds |
-| Session restore | Implemented with network/server failure handling | Verify background/foreground and offline behavior on both platforms |
-| Profile and effective plan | Implemented | Verify against real accounts and complimentary plans |
-| Assistants | Native create/read/update/delete with searchable categories | Verify Android and iOS behavior |
-| Conversations | Native cross-assistant history, search, create/read/rename/delete | Verify Android and iOS behavior |
-| Chat | Native AI chat with saved history, sharing, timestamps and delivery recovery | Verify Android and iOS behavior |
-| Privacy and help | Account privacy, support, password recovery and deletion handoff | Verify external browser/email behavior on both platforms |
-| Knowledge Base | Existing production web flow remains available | Larger native Knowledge Base upgrade deferred to a later shared Android + iOS release |
-| Usage and analytics | No authoritative native quota/storage API | Expanded native analytics deferred unless required for release compliance |
-| Billing / subscriptions | Existing backend entitlements remain authoritative | Define compliant platform purchase/restore strategy without breaking existing web/Stripe subscriptions |
-| Android replacement | Existing Google Play app is Kotlin/WebView | Verify shared Expo Android build before replacing it in a future Play update |
-| iOS distribution | Shared Expo app | Complete signing, App Store Connect and TestFlight verification |
+Neither successful exports nor browser tests establish physical-device readiness.
+Actual Android and iOS verification is required before any release claim.
 
 ## Shared API contracts
 

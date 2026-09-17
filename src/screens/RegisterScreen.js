@@ -1,9 +1,12 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import ActionButton from '../components/ActionButton';
 import { openAccountLink } from '../services/externalLinks';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,9 +16,12 @@ import {
 } from 'react-native';
 
 import { registerUser } from '../services/authService';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function RegisterScreen({ navigation }) {
+  const headerHeight = useHeaderHeight();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,8 +80,9 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { width: '100%', maxWidth: 760, alignSelf: 'center' }]}
         keyboardShouldPersistTaps="handled"
       >
         <View>
@@ -167,11 +174,12 @@ export default function RegisterScreen({ navigation }) {
 
         <Text style={styles.footer}>AI Assistant</Text>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -235,7 +243,9 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
@@ -247,7 +257,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },

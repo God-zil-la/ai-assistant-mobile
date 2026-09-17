@@ -1,8 +1,11 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import CategoryPicker from '../components/CategoryPicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
+  KeyboardAvoidingView,
+  Platform,
   Alert,
   ScrollView,
   StyleSheet,
@@ -17,12 +20,15 @@ import {
   updateBot,
 } from '../services/botService';
 import { getAuthToken } from '../services/tokenService';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function EditBotScreen({
   navigation,
   route,
 }) {
+  const headerHeight = useHeaderHeight();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const bot = route.params?.bot;
 
   const [category, setCategory] = useState(bot?.category || 'general');
@@ -172,8 +178,9 @@ export default function EditBotScreen({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { width: '100%', maxWidth: 760, alignSelf: 'center' }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
@@ -289,11 +296,12 @@ export default function EditBotScreen({
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -380,14 +388,16 @@ const styles = StyleSheet.create({
 
   saveButton: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
   },
 
   saveButtonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },

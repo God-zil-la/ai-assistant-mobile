@@ -3,9 +3,11 @@ import { Modal, FlatList, Text, TextInput, View, StyleSheet } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ActionButton from './ActionButton';
 import { categories } from '../config/categories';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function CategoryPicker({ value, onChange, disabled }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const label = categories.find((item) => item.value === value)?.label || value;
@@ -29,7 +31,7 @@ export default function CategoryPicker({ value, onChange, disabled }) {
     </View>
   );
 }
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { marginBottom: spacing.xl, gap: spacing.sm },
   label: { color: colors.text, fontSize: 15, fontWeight: '700' },
   hint: { color: colors.textMuted, lineHeight: 21 },

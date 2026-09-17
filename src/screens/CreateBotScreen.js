@@ -1,8 +1,11 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import CategoryPicker from '../components/CategoryPicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,9 +16,12 @@ import {
 
 import { createBot } from '../services/botService';
 import { getAuthToken } from '../services/tokenService';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function CreateBotScreen({ navigation }) {
+  const headerHeight = useHeaderHeight();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [category, setCategory] = useState('general');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -63,8 +69,9 @@ export default function CreateBotScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { width: '100%', maxWidth: 760, alignSelf: 'center' }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
@@ -164,11 +171,12 @@ export default function CreateBotScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -248,14 +256,16 @@ const styles = StyleSheet.create({
 
   createButton: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
   },
 
   createButtonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },

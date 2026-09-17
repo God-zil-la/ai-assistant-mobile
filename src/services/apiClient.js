@@ -25,7 +25,7 @@ function errorText(data) {
 }
 
 // A lost response can follow a committed write. Never retry mutations automatically.
-export async function request(url, { token, method = 'GET', body, timeout = 30000 } = {}) {
+export async function request(url, { token, method = 'GET', body, multipart = false, timeout = 30000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -34,9 +34,9 @@ export async function request(url, { token, method = 'GET', body, timeout = 3000
       headers: {
         Accept: 'application/json',
         ...(token ? { Authorization: `Token ${token}` } : {}),
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !multipart ? { 'Content-Type': 'application/json' } : {}),
       },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}),
     });
     if (response.status === 204) return null;
     const data = await response.json().catch(() => null);

@@ -1,3 +1,7 @@
+import DashboardScreen from '../screens/DashboardScreen';
+import AnalyticsScreen from '../screens/AnalyticsScreen';
+import KnowledgeScreen from '../screens/KnowledgeScreen';
+import ThemeControl from '../components/ThemeControl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -5,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { DarkTheme, NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import ChatScreen from '../screens/ChatScreen';
@@ -25,11 +29,14 @@ import {
   clearAuthSession,
   getAuthToken,
 } from '../services/tokenService';
-import { colors } from '../styles/theme';
+import { useTheme, useThemedStyles } from '../styles/theme';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+  const { colors, mode } = useTheme();
+  const navigationTheme = mode === 'dark' ? DarkTheme : DefaultTheme;
+  const styles = useThemedStyles(makeStyles);
   const [initialRoute, setInitialRoute] = useState(null);
   const [initialUser, setInitialUser] = useState(null);
   const [startupError, setStartupError] = useState('');
@@ -81,10 +88,11 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, primary: colors.primary, background: colors.background, card: colors.surface, text: colors.text, border: colors.surfaceBorder } }}>
+    <NavigationContainer ref={navigationRef} theme={{ ...navigationTheme, colors: { ...navigationTheme.colors, primary: colors.primary, background: colors.background, card: colors.surface, text: colors.text, border: colors.surfaceBorder } }}>
       <Stack.Navigator
         initialRouteName={initialRoute}
         screenOptions={{
+          headerRight: () => <ThemeControl />,
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -95,6 +103,9 @@ export default function AppNavigator() {
           },
         }}
       >
+        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+        <Stack.Screen name="Analytics" component={AnalyticsScreen} />
+        <Stack.Screen name="Knowledge" component={KnowledgeScreen} />
         <Stack.Screen name="Account" component={AccountScreen} options={{ title: 'Account & Help' }} />
         <Stack.Screen
           name="Welcome"
@@ -167,7 +178,7 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   loadingContainer: {
     flex: 1,
     alignItems: 'center',

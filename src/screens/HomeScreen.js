@@ -1,3 +1,6 @@
+import ThemeControl from '../components/ThemeControl';
+import Footer from '../components/Footer';
+import { openAccountLink, openDiscordSetup } from '../services/externalLinks';
 import { useFocusEffect } from '@react-navigation/native';
 import ActionButton from '../components/ActionButton';
 import { getCurrentUser } from '../services/authService';
@@ -19,9 +22,11 @@ import {
   clearAuthSession,
   getAuthToken,
 } from '../services/tokenService';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function HomeScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [loggingOut, setLoggingOut] = useState(false);
   const [bots, setBots] = useState([]);
   const [loadingBots, setLoadingBots] = useState(true);
@@ -90,7 +95,8 @@ export default function HomeScreen({ navigation, route }) {
     });
   }
 
-  const planName = user?.plan?.toUpperCase() || 'FREE';
+  async function openLink(key, botId) { try { if (botId) await openDiscordSetup(botId); else await openAccountLink(key); } catch (err) { setBotsError(err.message); } }
+  const planName = user?.plan?.toUpperCase() || 'Unavailable';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -108,6 +114,7 @@ export default function HomeScreen({ navigation, route }) {
             Signed in as {user?.username || 'User'}
           </Text>
 
+          <ThemeControl />
           <View style={styles.profileCard}>
             <Text style={styles.profileLabel}>
               Email
@@ -127,6 +134,9 @@ export default function HomeScreen({ navigation, route }) {
           </View>
 
           <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
+            <ActionButton title="Dashboard" secondary onPress={() => navigation.navigate('Dashboard')} />
+            <ActionButton title="Analytics" secondary onPress={() => navigation.navigate('Analytics')} />
+            <ActionButton title="Information Guide (PDF)" secondary onPress={() => openLink('guide')} />
             <ActionButton title="All conversations" secondary onPress={() => navigation.navigate('Conversations')} />
             <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
           </View>
@@ -234,6 +244,7 @@ export default function HomeScreen({ navigation, route }) {
                   </Text>
                 ) : null}
 
+                {bot.created_at ? <Text style={styles.botDescription}>Created on {new Date(bot.created_at).toLocaleDateString()}</Text> : null}
                 <Text style={styles.botMetaText}>
                   {bot.category || 'general'}
                 </Text>
@@ -244,6 +255,11 @@ export default function HomeScreen({ navigation, route }) {
                   </Text>
                 ) : null}
 
+                <View style={{ gap: 10, marginTop: 16 }}>
+                  <ActionButton title="Knowledge Base" secondary onPress={() => navigation.navigate('Knowledge', { bot })} />
+                  <ActionButton title={user?.plan === 'pro' ? 'Discord Setup' : 'Discord — Pro'} secondary onPress={() => user?.plan === 'pro' ? openLink(null, bot.id) : openLink('billing')} />
+                  <Text style={styles.botDescription}>Discord setup opens our website and requires browser sign-in.</Text>
+                </View>
                 <TouchableOpacity
                   style={styles.chatButton}
                   activeOpacity={0.8}
@@ -273,13 +289,14 @@ export default function HomeScreen({ navigation, route }) {
                 : 'Sign Out'}
             </Text>
           </TouchableOpacity>
+          <Footer />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -361,14 +378,16 @@ const styles = StyleSheet.create({
   },
 
   createButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: 11,
   },
 
   createButtonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -494,7 +513,9 @@ const styles = StyleSheet.create({
 
   chatButton: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 13,
     alignItems: 'center',
@@ -502,14 +523,16 @@ const styles = StyleSheet.create({
   },
 
   chatButtonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '800',
   },
 
   signOutButton: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.button,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
@@ -522,7 +545,7 @@ const styles = StyleSheet.create({
   },
 
   signOutButtonText: {
-    color: colors.primaryText,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },

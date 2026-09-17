@@ -1,159 +1,33 @@
+import { useState } from 'react';
+import { ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
-import { colors, radius, spacing } from '../styles/theme';
-
+import Panel from '../components/Panel';
+import Footer from '../components/Footer';
+import ThemeControl from '../components/ThemeControl';
+import ActionButton from '../components/ActionButton';
+import { openAccountLink } from '../services/externalLinks';
+import { useTheme } from '../styles/theme';
 export default function WelcomeScreen({ navigation }) {
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.brand}>
-          <Text style={styles.logo}>AI</Text>
-
-          <Text style={styles.title}>AI Assistant</Text>
-
-          <Text style={styles.subtitle}>
-            Your intelligent assistants, wherever you are.
-          </Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Welcome</Text>
-
-          <Text style={styles.cardText}>
-            Sign in to access your assistants, and saved conversations.
-          </Text>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.primaryButtonText}>Sign In</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('Register')}
-          >
-            <Text style={styles.secondaryButtonText}>
-              Create Account
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.footer}>AI Assistant</Text>
-      </View>
-    </SafeAreaView>
-  );
+  const { colors } = useTheme();
+  const [error, setError] = useState('');
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView contentContainerStyle={{ padding: 24, gap: 24, width: '100%', maxWidth: 800, alignSelf: 'center' }}>
+      <ThemeControl />
+      <Text style={{ color: colors.text, fontSize: 32, fontWeight: '800' }}>AI Assistant</Text>
+      <Panel><Text style={{ color: colors.primary, fontSize: 28, fontWeight: '800' }}>Powerful AI assistants. Simple pricing.</Text>
+        <Text style={{ color: colors.text, fontSize: 16, lineHeight: 25 }}>Create AI assistants for your personal projects, studies, documents, customer support, or business. Add your own knowledge, keep your conversations organized, and start chatting in minutes.</Text>
+        <ActionButton title="Sign In" onPress={() => navigation.navigate('Login')} />
+        <ActionButton title="Create Account" secondary onPress={() => navigation.navigate('Register')} />
+      </Panel>
+      {[
+        ['Create your own AI assistants', 'Build personalized AI assistants for work, studies, hobbies, customer support, or your business.'],
+        ['Add your own knowledge', 'Upload documents so your assistants can answer using knowledge that matters to you.'],
+        ['Keep unlimited conversations', 'Start separate conversations and return to your chat history whenever you need it.'],
+        ['Understand your AI usage', 'View usage and conversation analytics to understand how your assistants are being used.'],
+      ].map(([title, description]) => <Panel key={title}><Text style={{ color: colors.primary, fontSize: 20, fontWeight: '700' }}>{title}</Text><Text style={{ color: colors.text, lineHeight: 24 }}>{description}</Text></Panel>)}
+      <ActionButton title="Plans & Pricing" secondary onPress={async () => { try { await openAccountLink('plans'); } catch (err) { setError(err.message); } }} />
+      {error ? <Text accessibilityRole="alert" style={{ color: colors.error }}>{error}</Text> : null}
+      <Footer />
+    </ScrollView>
+  </SafeAreaView>;
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xxl,
-    justifyContent: 'space-between',
-    backgroundColor: colors.background,
-  },
-
-  brand: {
-    alignItems: 'center',
-    marginTop: 50,
-  },
-
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.lg,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    backgroundColor: colors.primary,
-    color: colors.primaryText,
-    fontSize: 30,
-    fontWeight: '900',
-    marginBottom: 20,
-  },
-
-  title: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 23,
-    maxWidth: 320,
-  },
-
-  card: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-  },
-
-  cardTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-
-  cardText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: spacing.xl,
-  },
-
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-
-  primaryButtonText: {
-    color: colors.primaryText,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-
-  secondaryButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  footer: {
-    color: colors.textSubtle,
-    fontSize: 13,
-    textAlign: 'center',
-  },
-});

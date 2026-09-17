@@ -1,3 +1,4 @@
+import Footer from '../components/Footer';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +8,11 @@ import { createConversation, deleteConversation, getConversations } from '../ser
 import { getAuthToken } from '../services/tokenService';
 import { confirmDelete } from '../utils/confirm';
 import { filterConversations, formatDate } from '../utils/conversations';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
 export default function ConversationsScreen({ navigation, route }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const bot = route.params?.bot;
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,9 +69,11 @@ export default function ConversationsScreen({ navigation, route }) {
       <FlatList data={visible} keyExtractor={(item) => item.conversation_id}
         contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.primary} />}
+        ListFooterComponent={<Footer />}
         ListHeaderComponent={<View style={styles.header}>
           <Text style={styles.title}>{bot?.name || 'All conversations'}</Text>
           <Text style={styles.muted}>Continue a chat, or find it by title or assistant name.</Text>
+          {bot ? <ActionButton title="Knowledge Base" secondary onPress={() => navigation.navigate('Knowledge', { bot })} /> : null}
           {bot ? <ActionButton title={busy ? 'Please wait…' : '+ New conversation'} disabled={busy || loading} onPress={create} /> : null}
           <TextInput style={styles.input} value={query} onChangeText={setQuery} placeholder="Search conversations"
             placeholderTextColor={colors.textMuted} accessibilityLabel="Search conversations" autoCorrect={false} />
@@ -89,7 +94,7 @@ export default function ConversationsScreen({ navigation, route }) {
     </SafeAreaView>
   );
 }
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.xl, width: '100%', maxWidth: 760, alignSelf: 'center', flexGrow: 1 },
   header: { gap: spacing.lg, marginBottom: spacing.xl },

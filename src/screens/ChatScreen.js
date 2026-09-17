@@ -1,3 +1,4 @@
+import MessageText from '../components/MessageText';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +8,11 @@ import { sendChatMessage } from '../services/chatService';
 import { getConversation, renameConversation } from '../services/conversationService';
 import { getAuthToken } from '../services/tokenService';
 import { conversationTranscript, formatDate } from '../utils/conversations';
-import { colors, radius, spacing } from '../styles/theme';
+import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
-export default function ChatScreen({ route }) {
+export default function ChatScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const bot = route.params?.bot;
   const conversationId = route.params?.conversationId;
   const [conversation, setConversation] = useState(null);
@@ -123,6 +126,7 @@ export default function ChatScreen({ route }) {
               <View style={styles.action}><ActionButton title="Rename" secondary disabled={blocked} onPress={() => { setTitle(conversation.title || ''); setEditing(true); }} /></View>
               <View style={styles.action}><ActionButton title="Share chat" secondary disabled={blocked || !conversation?.messages?.length} onPress={share} /></View>
             </View>}
+            <ActionButton title="Knowledge Base" secondary onPress={() => navigation.navigate('Knowledge', { bot: { id: conversation?.bot_id || bot?.id, name: conversation?.bot_name || bot?.name } })} />
             {notice ? <Text style={styles.muted} accessibilityLiveRegion="polite">{notice}</Text> : null}
             {error ? <View style={styles.editor}><Text accessibilityRole="alert" style={styles.error}>{error}</Text>
               <ActionButton title="Refresh chat" secondary disabled={busy || loading} onPress={refresh} /></View> : null}
@@ -137,7 +141,7 @@ export default function ChatScreen({ route }) {
                 const user = item.sender === 'user';
                 return <View style={[styles.bubble, user ? styles.userBubble : styles.assistantBubble]}>
                   <Text style={[styles.sender, user && styles.darkText]}>{user ? 'You' : conversation.bot_name || 'Assistant'}</Text>
-                  <Text selectable style={[styles.message, user && styles.darkText]}>{item.message}</Text>
+                  <MessageText style={[styles.message, user && styles.darkText]} message={item.message} />
                   <Text style={[styles.date, user && styles.darkText]}>{formatDate(item.timestamp)}</Text>
                 </View>;
               }} />}
@@ -153,19 +157,19 @@ export default function ChatScreen({ route }) {
     </SafeAreaView>
   );
 }
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, width: '100%', maxWidth: 800, alignSelf: 'center' },
   header: { padding: spacing.lg, gap: spacing.sm }, title: { color: colors.text, fontSize: 22, fontWeight: '800' },
-  muted: { color: colors.textMuted, lineHeight: 21 }, actions: { flexDirection: 'row', gap: spacing.sm }, action: { flex: 1 },
+  muted: { color: colors.textMuted, lineHeight: 21 }, actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, action: { flex: 1 },
   editor: { gap: spacing.sm }, error: { color: colors.error, lineHeight: 21 },
   input: { backgroundColor: colors.surface, color: colors.text, borderWidth: 1, borderColor: colors.surfaceBorder, borderRadius: radius.md, padding: spacing.md, fontSize: 16 },
   loader: { flex: 1 }, messages: { flex: 1 }, messageContent: { padding: spacing.lg, gap: spacing.md },
   bubble: { maxWidth: '92%', borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: colors.primary },
+  userBubble: { alignSelf: 'flex-end', backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border },
   assistantBubble: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },
   sender: { color: colors.text, fontSize: 13, fontWeight: '800' }, message: { color: colors.text, fontSize: 16, lineHeight: 24 },
-  darkText: { color: colors.primaryText }, date: { color: colors.textMuted, fontSize: 11 },
+  darkText: { color: colors.text }, date: { color: colors.textMuted, fontSize: 11 },
   composer: { padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, gap: spacing.sm },
   draft: { minHeight: 48, maxHeight: 120 }, disclaimer: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
 });

@@ -1,3 +1,4 @@
+const { Buffer } = require('node:buffer');
 const { chromium } = require('playwright');
 const http = require('node:http');
 const fs = require('node:fs');
@@ -25,6 +26,8 @@ const server = http.createServer((req, res) => {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     let failMe = false;
+    let knowledge = [{ id: 1, name: 'Existing.txt' }];
+    let uploadMode = 'success';
     let failHistory = false;
     let chatCalls = 0;
     let chatMode = 'historyFailure';
@@ -44,7 +47,17 @@ const server = http.createServer((req, res) => {
         if (failMe === true) { await route.abort('internetdisconnected'); return; }
         if (failMe === 401) { status = 401; data = { detail: 'Invalid token' }; }
         else data = { username: 'Demo', email: 'demo@example.test', plan: 'premium' };
-      } else if (pathname.endsWith('/api/bots/')) data = [bot];
+      } else if (pathname.endsWith('/api/dashboard/')) data = { current_plan: 'premium', message_count: 12, message_limit: 3000, bot_count: 1, bot_limit: 5, knowledge_used_display: '0.02 MB', knowledge_limit_display: '250 MB' };
+      else if (pathname.endsWith('/api/analytics/')) data = { bot_data: { labels: [bot.name], counts: [2] }, time_data: { labels: ['2026-09-17'], counts: [2] } };
+      else if (pathname.endsWith('/knowledge/')) {
+        if (request.method() === 'POST') {
+          assert.match(request.headers()['content-type'], /multipart\/form-data; boundary=/);
+          if (uploadMode === 'uncertain') { await route.abort('internetdisconnected'); return; }
+          if (uploadMode === 'quota') { status = 403; data = { error: 'Knowledge storage limit reached.' }; }
+          else { const item = { id: 2, name: 'uploaded.txt' }; knowledge.push(item); status = 201; data = item; }
+        } else data = { files: knowledge };
+      } else if (pathname.endsWith('/knowledge/2/')) { knowledge = knowledge.filter(item => item.id !== 2); await route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*' } }); return; }
+      else if (pathname.endsWith('/api/bots/')) data = [bot];
       else if (pathname.endsWith('/api/bots/7/')) { Object.assign(bot, request.postDataJSON()); data = bot; }
       else if (pathname.endsWith('/api/conversations/')) data = [conversation];
       else if (pathname.endsWith('/api/conversations/abc/')) {
@@ -67,6 +80,56 @@ const server = http.createServer((req, res) => {
     const origin = `http://127.0.0.1:${server.address().port}`;
     await page.goto(origin);
     await page.getByText('Signed in as Demo').waitFor();
+    await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
+    assert.equal(await page.evaluate(() => localStorage.getItem('theme')), 'dark');
+    await page.reload();
+    await page.getByRole('button', { name: 'Light theme', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Dashboard', exact: true }).click();
+    await page.getByText('12 / 3000 this month').waitFor();
+    await page.screenshot({ path: path.join(__dirname, '../.expo/dashboard-dark.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+    await page.screenshot({ path: path.join(__dirname, '../.expo/dashboard-light.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Analytics', exact: true }).click();
+    await page.getByText('Messages by Assistant', { exact: true }).waitFor();
+    await page.getByText('Messages Over Time', { exact: true }).waitFor();
+    for (const viewport of [{ width: 360, height: 800 }, { width: 393, height: 852 }, { width: 768, height: 1024 }, { width: 1000, height: 700 }]) {
+      await page.setViewportSize(viewport);
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      await page.screenshot({ path: path.join(__dirname, `../.expo/analytics-${viewport.width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(origin);
+    await page.getByRole('button', { name: 'Knowledge Base', exact: true }).click();
+    await page.getByText('Existing.txt', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'What is Knowledge?', exact: true }).click();
+    await page.getByText('Simple example', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Got it', exact: true }).click();
+    await page.getByRole('button', { name: 'Got it', exact: true }).waitFor({ state: 'hidden' });
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Choose document', exact: true }).click();
+    await (await chooser).setFiles({ name: 'uploaded.txt', mimeType: 'text/plain', buffer: Buffer.from('Existing feature test') });
+    await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
+    await page.getByText('Knowledge uploaded and processed successfully!', { exact: true }).waitFor();
+    assert.equal(knowledge.length, 2);
+    await page.screenshot({ path: path.join(__dirname, '../.expo/knowledge-light.png'), fullPage: true });
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Delete uploaded.txt', exact: true }).click();
+    await page.getByText('Knowledge deleted successfully.', { exact: true }).waitFor();
+    assert.equal(knowledge.length, 1);
+    const secondChooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Choose document', exact: true }).click();
+    await (await secondChooser).setFiles({ name: 'retry.txt', mimeType: 'text/plain', buffer: Buffer.from('Retry test') });
+    uploadMode = 'uncertain';
+    await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
+    await page.getByText('Upload could not be confirmed.', { exact: false }).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).isDisabled(), true);
+    await page.getByRole('button', { name: 'Refresh knowledge', exact: true }).click();
+    await page.getByText('Existing.txt', { exact: true }).waitFor();
+    uploadMode = 'quota';
+    await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
+    await page.getByText('Knowledge storage limit reached.', { exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), 'mock-token');
+    await page.goto(origin);
     await page.getByText('Edit', { exact: true }).click();
     await page.getByRole('button', { name: 'Choose category, currently Travel' }).click();
     await page.getByRole('textbox', { name: 'Search categories' }).fill('tech');
@@ -128,6 +191,6 @@ const server = http.createServer((req, res) => {
     await page.getByText('Welcome Back', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), null);
     assert.deepEqual(errors, []);
-    console.log('PASS: category edit, return navigation, global history, search, rename, confirmed-send/history-failure recovery, uncertain-send draft recovery, quota preservation, account UI, offline session retry, expired-session sign-out; no page errors.');
+    console.log('PASS: persisted theme, dashboard, two analytics charts, four viewport widths, knowledge help/upload/delete/uncertain recovery/quota, category edit, return navigation, global history, search, rename, confirmed-send/history-failure recovery, uncertain-send draft recovery, quota preservation, account UI, offline session retry, expired-session sign-out; no page errors.');
   } finally { await browser.close(); server.close(); }
 })().catch((error) => { console.error(error); server.close(); process.exitCode = 1; });
