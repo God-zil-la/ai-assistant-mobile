@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@react-navigation/elements": "^2.9.42",
     "@react-navigation/native": "^7.4.1",
     "@react-navigation/native-stack": "^7.19.1",
     "expo": "~57.0.23",
@@ -19,7 +20,16 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "node --test tests/*.test.mjs",
+    "lint": "eslint .",
+    "export:all": "expo export --platform all",
+    "test:ui": "node tests/ui-smoke.cjs"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "^57.0.2",
+    "playwright": "^1.63.0"
+  }
 }

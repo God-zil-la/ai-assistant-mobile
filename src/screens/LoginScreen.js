@@ -1,8 +1,13 @@
+import ActionButton from '../components/ActionButton';
+import { openAccountLink } from '../services/externalLinks';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
-  SafeAreaView,
   StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
@@ -22,7 +27,12 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  async function openHelp(key) {
+    try { await openAccountLink(key); } catch (err) { setError(err.message); }
+  }
+
   async function handleLogin() {
+    if (loading) return;
     setError('');
 
     if (!username.trim() || !password) {
@@ -45,9 +55,7 @@ export default function LoginScreen({ navigation }) {
 
       const user = await getCurrentUser(data.token);
 
-      navigation.replace('Home', {
-        user,
-      });
+      navigation.reset({ index: 0, routes: [{ name: 'Home', params: { user } }] });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -56,8 +64,9 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={100}>
+      <ScrollView contentContainerStyle={[styles.container, { flex: undefined, flexGrow: 1 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           <Text style={styles.title}>Welcome Back</Text>
 
@@ -106,8 +115,13 @@ export default function LoginScreen({ navigation }) {
               {loading ? 'Signing In...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
+          <View style={{ gap: spacing.md, marginTop: spacing.xl }}>
+            <ActionButton title="Forgot password?" secondary onPress={() => openHelp('passwordReset')} />
+            <ActionButton title="Resend verification email" secondary onPress={() => openHelp('verification')} />
+          </View>
         </View>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

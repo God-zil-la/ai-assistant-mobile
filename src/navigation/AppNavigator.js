@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import ChatScreen from '../screens/ChatScreen';
@@ -15,6 +16,10 @@ import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
+import AccountScreen from '../screens/AccountScreen';
+import ActionButton from '../components/ActionButton';
+import { onUnauthorized } from '../services/apiClient';
+import { restoreSession } from '../services/sessionRestore';
 import { getCurrentUser } from '../services/authService';
 import {
   clearAuthSession,
@@ -27,43 +32,56 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState(null);
   const [initialUser, setInitialUser] = useState(null);
+  const [startupError, setStartupError] = useState('');
+  const navigationRef = useNavigationContainerRef();
+  const invalidating = useRef(false);
+
+  const checkAuthSession = useCallback(() => restoreSession({
+    getToken: getAuthToken, getUser: getCurrentUser, clear: clearAuthSession,
+  }).then((user) => {
+    setInitialUser(user);
+    setInitialRoute(user ? 'Home' : 'Welcome');
+  }).catch((error) => {
+    setStartupError(error.message || 'Unable to restore your session. Please try again.');
+  }), []);
 
   useEffect(() => {
-    async function checkAuthSession() {
-      try {
-        const token = await getAuthToken();
-
-        if (!token) {
-          setInitialRoute('Welcome');
-          return;
-        }
-
-        const user = await getCurrentUser(token);
-
-        setInitialUser(user);
-        setInitialRoute('Home');
-      } catch {
-        await clearAuthSession();
-        setInitialRoute('Welcome');
-      }
-    }
-
     checkAuthSession();
-  }, []);
+  }, [checkAuthSession]);
+
+  useEffect(() => onUnauthorized(async (rejectedToken) => {
+    if (!navigationRef.isReady() || invalidating.current) return;
+    invalidating.current = true;
+    try {
+      // An old request must not sign out a newly authenticated account.
+      if (await getAuthToken() !== rejectedToken) return;
+      await clearAuthSession();
+      navigationRef.resetRoot({ index: 0, routes: [{ name: 'Login' }] });
+    } catch {
+      navigationRef.resetRoot({ index: 0, routes: [{ name: 'Login' }] });
+    } finally {
+      invalidating.current = false;
+    }
+  }), [navigationRef]);
 
   if (!initialRoute) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
+        {startupError ? <View style={{ padding: 24, gap: 20, maxWidth: 500 }}>
+          <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>Unable to connect</Text>
+          <Text style={{ color: colors.textMuted, lineHeight: 22 }} accessibilityRole="alert">{startupError}</Text>
+          <Text style={{ color: colors.textMuted }}>Your saved sign-in has been kept on this device.</Text>
+          <ActionButton title="Try again" onPress={() => { setStartupError(''); checkAuthSession(); }} />
+        </View> : <ActivityIndicator
           size="large"
           color={colors.primary}
-        />
+        />}
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, primary: colors.primary, background: colors.background, card: colors.surface, text: colors.text, border: colors.surfaceBorder } }}>
       <Stack.Navigator
         initialRouteName={initialRoute}
         screenOptions={{
@@ -77,6 +95,7 @@ export default function AppNavigator() {
           },
         }}
       >
+        <Stack.Screen name="Account" component={AccountScreen} options={{ title: 'Account & Help' }} />
         <Stack.Screen
           name="Welcome"
           component={WelcomeScreen}

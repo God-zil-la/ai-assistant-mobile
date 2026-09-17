@@ -1,8 +1,9 @@
+import CategoryPicker from '../components/CategoryPicker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
   Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,6 +25,7 @@ export default function EditBotScreen({
 }) {
   const bot = route.params?.bot;
 
+  const [category, setCategory] = useState(bot?.category || 'general');
   const [name, setName] = useState(bot?.name || '');
   const [description, setDescription] = useState(
     bot?.description || '',
@@ -66,11 +68,11 @@ export default function EditBotScreen({
           name: name.trim(),
           description: description.trim(),
           personality: personality.trim(),
-          category: bot.category || 'general',
+          category,
         },
       );
 
-      navigation.navigate('Home', {
+      navigation.popTo('Home', {
         refreshBots: Date.now(),
       });
     } catch (err) {
@@ -149,7 +151,7 @@ export default function EditBotScreen({
 
   if (!bot) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <View style={styles.missingContainer}>
           <Text style={styles.errorText}>
             Unable to find this assistant.
@@ -169,7 +171,7 @@ export default function EditBotScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -233,13 +235,7 @@ export default function EditBotScreen({
             editable={!busy}
           />
 
-          <Text style={styles.categoryText}>
-            Category:{' '}
-            {bot.category
-              ? bot.category.charAt(0).toUpperCase() +
-                bot.category.slice(1)
-              : 'General'}
-          </Text>
+<CategoryPicker value={category} onChange={setCategory} disabled={busy} />
 
           {error ? (
             <View style={styles.errorCard}>

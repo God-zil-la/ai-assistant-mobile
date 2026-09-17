@@ -1,5 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -26,7 +26,7 @@ export default function WelcomeScreen({ navigation }) {
           <Text style={styles.cardTitle}>Welcome</Text>
 
           <Text style={styles.cardText}>
-            Sign in to access your assistants, chats and knowledge base.
+            Sign in to access your assistants, and saved conversations.
           </Text>
 
           <TouchableOpacity

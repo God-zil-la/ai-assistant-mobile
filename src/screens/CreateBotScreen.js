@@ -1,7 +1,8 @@
+import CategoryPicker from '../components/CategoryPicker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { getAuthToken } from '../services/tokenService';
 import { colors, radius, spacing } from '../styles/theme';
 
 export default function CreateBotScreen({ navigation }) {
+  const [category, setCategory] = useState('general');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [personality, setPersonality] = useState(
@@ -44,10 +46,10 @@ export default function CreateBotScreen({ navigation }) {
         name: name.trim(),
         description: description.trim(),
         personality: personality.trim(),
-        category: 'general',
+        category,
       });
 
-      navigation.navigate('Home', {
+      navigation.popTo('Home', {
         refreshBots: Date.now(),
       });
     } catch (err) {
@@ -60,7 +62,7 @@ export default function CreateBotScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -124,9 +126,7 @@ export default function CreateBotScreen({ navigation }) {
             editable={!loading}
           />
 
-          <Text style={styles.categoryText}>
-            Category: General
-          </Text>
+<CategoryPicker value={category} onChange={setCategory} disabled={loading} />
 
           {error ? (
             <View style={styles.errorCard}>

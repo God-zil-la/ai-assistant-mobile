@@ -1,478 +1,171 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
+import ActionButton from '../components/ActionButton';
 import { sendChatMessage } from '../services/chatService';
-import { getConversation } from '../services/conversationService';
+import { getConversation, renameConversation } from '../services/conversationService';
 import { getAuthToken } from '../services/tokenService';
-import {
-  colors,
-  radius,
-  spacing,
-} from '../styles/theme';
+import { conversationTranscript, formatDate } from '../utils/conversations';
+import { colors, radius, spacing } from '../styles/theme';
 
 export default function ChatScreen({ route }) {
   const bot = route.params?.bot;
-  const conversationId =
-    route.params?.conversationId;
-
-  const [messages, setMessages] = useState([]);
+  const conversationId = route.params?.conversationId;
+  const [conversation, setConversation] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-
-  const scrollViewRef = useRef(null);
-
-  const loadConversation = useCallback(
-    async () => {
-      if (!conversationId) {
-        setError(
-          'Unable to find this conversation.',
-        );
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError('');
-
-      try {
-        const token = await getAuthToken();
-
-        if (!token) {
-          throw new Error(
-            'Your session has expired.',
-          );
-        }
-
-        const data = await getConversation(
-          token,
-          conversationId,
-        );
-
-        setMessages(
-          Array.isArray(data.messages)
-            ? data.messages
-            : [],
-        );
-      } catch (err) {
-        setError(
-          err.message ||
-            'Unable to load the conversation.',
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [conversationId],
-  );
-
-  useEffect(() => {
-    loadConversation();
-  }, [loadConversation]);
-
-  async function handleSend() {
-    const text = message.trim();
-
-    if (!text || sending || !bot?.id) {
-      return;
+  const [recovery, setRecovery] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState('');
+  const [notice, setNotice] = useState('');
+  const list = useRef(null);
+  const mutation = useRef(false);
+  const mounted = useRef(true);
+  const headerHeight = useHeaderHeight();
+  const load = useCallback(async () => {
+    if (!conversationId) throw new Error('Unable to find this conversation.');
+    const token = await getAuthToken();
+    if (!token) throw new Error('Your session has expired.');
+    const data = await getConversation(token, conversationId);
+    if (mounted.current) {
+      setConversation(data);
+      setRecovery(false);
     }
-
-    setSending(true);
+    return data;
+  }, [conversationId]);
+  const refresh = useCallback(async () => {
+    setLoading(true);
     setError('');
-    setMessage('');
-
+    try { await load(); }
+    catch (err) { if (mounted.current) setError(err.message); }
+    finally { if (mounted.current) setLoading(false); }
+  }, [load]);
+  useEffect(() => {
+    mounted.current = true;
+    load().catch((err) => {
+      if (mounted.current) setError(err.message);
+    }).finally(() => {
+      if (mounted.current) setLoading(false);
+    });
+    return () => { mounted.current = false; };
+  }, [load]);
+  async function send() {
+    const text = message.trim();
+    if (!text || mutation.current || loading || recovery || !conversation) return;
+    mutation.current = true;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    let sent = false;
     try {
       const token = await getAuthToken();
-
-      if (!token) {
-        throw new Error(
-          'Your session has expired.',
-        );
-      }
-
-      await sendChatMessage(
-        token,
-        bot.id,
-        text,
-        conversationId,
-      );
-
-      await loadConversation();
+      if (!token) throw new Error('Your session has expired.');
+      await sendChatMessage(token, conversation.bot_id || bot?.id, text, conversationId);
+      sent = true;
+      if (!mounted.current) return;
+      setMessage('');
+      await load();
     } catch (err) {
-      setMessage(text);
-
-      setError(
-        err.message ||
-          'Unable to send your message.',
-      );
+      if (!mounted.current) return;
+      if (sent) {
+        setRecovery(true);
+        setError('Message sent, but the updated history could not be loaded. Refresh the chat to see the reply.');
+      } else if (!err.status || err.status >= 500) {
+        setRecovery(true);
+        setError('Delivery could not be confirmed. Refresh the chat and check whether your message appears before sending it again. Your draft is still here.');
+      } else {
+        setError(err.message + (err.retryAfter ? ` Try again in ${err.retryAfter} seconds.` : ''));
+      }
     } finally {
-      setSending(false);
+      mutation.current = false;
+      if (mounted.current) setBusy(false);
     }
   }
-
-  function getSenderLabel(sender) {
-    if (sender === 'user') {
-      return 'You';
-    }
-
-    return bot?.name || 'Assistant';
+  async function saveTitle() {
+    if (mutation.current || !title.trim()) return;
+    mutation.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Your session has expired.');
+      const data = await renameConversation(token, conversationId, title);
+      if (mounted.current) {
+        setConversation((current) => ({ ...current, ...data }));
+        setEditing(false);
+        setNotice('Conversation renamed.');
+      }
+    } catch (err) { if (mounted.current) setError(err.message); }
+    finally { mutation.current = false; if (mounted.current) setBusy(false); }
   }
-
+  async function share() {
+    try {
+      await Share.share({ title: conversation.title || 'AI Assistant conversation', message: conversationTranscript(conversation) });
+    } catch { setError('Unable to share this conversation. You can select and copy individual messages.'); }
+  }
+  const blocked = busy || loading || recovery || !conversation;
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
-        }
-      >
+    <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>
-              {bot?.name || 'Assistant'}
-            </Text>
-
-            <Text style={styles.subtitle}>
-              AI Chat
-            </Text>
+            <Text numberOfLines={2} style={styles.title}>{conversation?.title || 'Untitled conversation'}</Text>
+            <Text style={styles.muted}>{conversation?.bot_name || bot?.name || 'Assistant'}</Text>
+            {editing ? <View style={styles.editor}>
+              <TextInput value={title} onChangeText={setTitle} maxLength={200} style={styles.input} editable={!busy}
+                accessibilityLabel="Conversation title" placeholder="Conversation title" placeholderTextColor={colors.textMuted} autoFocus />
+              <ActionButton title="Save title" onPress={saveTitle} disabled={busy || !title.trim()} />
+              <ActionButton title="Cancel" secondary disabled={busy} onPress={() => setEditing(false)} />
+            </View> : <View style={styles.actions}>
+              <View style={styles.action}><ActionButton title="Rename" secondary disabled={blocked} onPress={() => { setTitle(conversation.title || ''); setEditing(true); }} /></View>
+              <View style={styles.action}><ActionButton title="Share chat" secondary disabled={blocked || !conversation?.messages?.length} onPress={share} /></View>
+            </View>}
+            {notice ? <Text style={styles.muted} accessibilityLiveRegion="polite">{notice}</Text> : null}
+            {error ? <View style={styles.editor}><Text accessibilityRole="alert" style={styles.error}>{error}</Text>
+              <ActionButton title="Refresh chat" secondary disabled={busy || loading} onPress={refresh} /></View> : null}
           </View>
-
-          {error ? (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>
-                {error}
-              </Text>
-            </View>
-          ) : null}
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator
-                size="large"
-                color={colors.primary}
-              />
-
-              <Text style={styles.loadingText}>
-                Loading chat...
-              </Text>
-            </View>
-          ) : (
-            <ScrollView
-              ref={scrollViewRef}
-              style={styles.messages}
-              contentContainerStyle={
-                styles.messagesContent
-              }
-              keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() => {
-                scrollViewRef.current?.scrollToEnd({
-                  animated: true,
-                });
-              }}
-            >
-              {messages.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyTitle}>
-                    Start the conversation
-                  </Text>
-
-                  <Text style={styles.emptyText}>
-                    Send a message to{' '}
-                    {bot?.name || 'your assistant'}.
-                  </Text>
-                </View>
-              ) : null}
-
-              {messages.map((chatMessage) => {
-                const isUser =
-                  chatMessage.sender === 'user';
-
-                return (
-                  <View
-                    key={chatMessage.id}
-                    style={[
-                      styles.messageRow,
-                      isUser
-                        ? styles.userMessageRow
-                        : styles.botMessageRow,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.messageBubble,
-                        isUser
-                          ? styles.userBubble
-                          : styles.botBubble,
-                      ]}
-                    >
-                      <Text style={styles.sender}>
-                        {getSenderLabel(
-                          chatMessage.sender,
-                        )}
-                      </Text>
-
-                      <Text style={styles.messageText}>
-                        {chatMessage.message}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-
-              {sending ? (
-                <View style={styles.botMessageRow}>
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      styles.botBubble,
-                    ]}
-                  >
-                    <Text style={styles.sender}>
-                      {bot?.name || 'Assistant'}
-                    </Text>
-
-                    <Text style={styles.thinkingText}>
-                      Thinking...
-                    </Text>
-                  </View>
-                </View>
-              ) : null}
-            </ScrollView>
-          )}
-
+          {loading && !conversation ? <ActivityIndicator style={styles.loader} color={colors.primary} /> :
+            <FlatList ref={list} data={conversation?.messages || []} keyExtractor={(item) => String(item.id)}
+              style={styles.messages} contentContainerStyle={styles.messageContent} keyboardShouldPersistTaps="handled"
+              onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
+              ListEmptyComponent={!error ? <Text style={styles.muted}>Send a message to start this conversation.</Text> : null}
+              ListFooterComponent={busy && !editing ? <Text style={styles.muted} accessibilityLiveRegion="polite">Waiting for your assistant…</Text> : null}
+              renderItem={({ item }) => {
+                const user = item.sender === 'user';
+                return <View style={[styles.bubble, user ? styles.userBubble : styles.assistantBubble]}>
+                  <Text style={[styles.sender, user && styles.darkText]}>{user ? 'You' : conversation.bot_name || 'Assistant'}</Text>
+                  <Text selectable style={[styles.message, user && styles.darkText]}>{item.message}</Text>
+                  <Text style={[styles.date, user && styles.darkText]}>{formatDate(item.timestamp)}</Text>
+                </View>;
+              }} />}
           <View style={styles.composer}>
-            <TextInput
-              style={styles.input}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Message your assistant..."
-              placeholderTextColor={colors.textMuted}
-              multiline
-              editable={!sending}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!message.trim() || sending) &&
-                  styles.buttonDisabled,
-              ]}
-              activeOpacity={0.8}
-              onPress={handleSend}
-              disabled={!message.trim() || sending}
-            >
-              <Text style={styles.sendButtonText}>
-                Send
-              </Text>
-            </TouchableOpacity>
+            <TextInput value={message} onChangeText={setMessage} multiline style={[styles.input, styles.draft]}
+              placeholder="Message your assistant…" placeholderTextColor={colors.textMuted} editable={!busy}
+              accessibilityLabel="Message your assistant" />
+            <ActionButton title={busy ? 'Waiting…' : 'Send'} onPress={send} disabled={blocked || !message.trim()} />
+            <Text style={styles.disclaimer}>AI can make mistakes. Check important information.</Text>
           </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  keyboardView: {
-    flex: 1,
-  },
-
-  container: {
-    flex: 1,
-    width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
-    backgroundColor: colors.background,
-  },
-
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-
-  title: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 3,
-  },
-
-  errorCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-  },
-
-  errorText: {
-    color: colors.error,
-    fontSize: 14,
-  },
-
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  loadingText: {
-    color: colors.textMuted,
-    marginTop: spacing.md,
-  },
-
-  messages: {
-    flex: 1,
-  },
-
-  messagesContent: {
-    padding: spacing.xl,
-    paddingBottom: spacing.xxl,
-  },
-
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.xl,
-    alignItems: 'center',
-  },
-
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: spacing.sm,
-  },
-
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-
-  messageRow: {
-    width: '100%',
-    marginBottom: spacing.md,
-  },
-
-  userMessageRow: {
-    alignItems: 'flex-end',
-  },
-
-  botMessageRow: {
-    alignItems: 'flex-start',
-  },
-
-  messageBubble: {
-    maxWidth: '85%',
-    borderRadius: radius.md,
-    padding: spacing.md,
-  },
-
-  userBubble: {
-    backgroundColor: colors.primary,
-  },
-
-  botBubble: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-
-  sender: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
-    marginBottom: 5,
-  },
-
-  messageText: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
-  },
-
-  thinkingText: {
-    color: colors.textMuted,
-    fontSize: 15,
-  },
-
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-  },
-
-  input: {
-    flex: 1,
-    maxHeight: 130,
-    minHeight: 48,
-    backgroundColor: colors.surface,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 15,
-  },
-
-  sendButton: {
-    minHeight: 48,
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-  },
-
-  sendButtonText: {
-    color: colors.primaryText,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  buttonDisabled: {
-    opacity: 0.5,
-  },
+  safe: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, width: '100%', maxWidth: 800, alignSelf: 'center' },
+  header: { padding: spacing.lg, gap: spacing.sm }, title: { color: colors.text, fontSize: 22, fontWeight: '800' },
+  muted: { color: colors.textMuted, lineHeight: 21 }, actions: { flexDirection: 'row', gap: spacing.sm }, action: { flex: 1 },
+  editor: { gap: spacing.sm }, error: { color: colors.error, lineHeight: 21 },
+  input: { backgroundColor: colors.surface, color: colors.text, borderWidth: 1, borderColor: colors.surfaceBorder, borderRadius: radius.md, padding: spacing.md, fontSize: 16 },
+  loader: { flex: 1 }, messages: { flex: 1 }, messageContent: { padding: spacing.lg, gap: spacing.md },
+  bubble: { maxWidth: '92%', borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
+  userBubble: { alignSelf: 'flex-end', backgroundColor: colors.primary },
+  assistantBubble: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },
+  sender: { color: colors.text, fontSize: 13, fontWeight: '800' }, message: { color: colors.text, fontSize: 16, lineHeight: 24 },
+  darkText: { color: colors.primaryText }, date: { color: colors.textMuted, fontSize: 11 },
+  composer: { padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, gap: spacing.sm },
+  draft: { minHeight: 48, maxHeight: 120 }, disclaimer: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
 });

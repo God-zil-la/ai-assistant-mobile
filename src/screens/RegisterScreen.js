@@ -1,7 +1,9 @@
+import ActionButton from '../components/ActionButton';
+import { openAccountLink } from '../services/externalLinks';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +15,7 @@ import {
 import { registerUser } from '../services/authService';
 import { colors, radius, spacing } from '../styles/theme';
 
-export default function RegisterScreen() {
+export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +25,12 @@ export default function RegisterScreen() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  async function openHelp(key) {
+    try { await openAccountLink(key); } catch (err) { setError(err.message); }
+  }
+
   async function handleRegister() {
+    if (loading || success) return;
     setError('');
     setSuccess('');
 
@@ -66,7 +73,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -142,12 +149,19 @@ export default function RegisterScreen() {
               style={[styles.button, loading && styles.buttonDisabled]}
               activeOpacity={0.8}
               onPress={handleRegister}
-              disabled={loading}
+              disabled={loading || !!success}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Creating Account...' : success ? 'Check your email' : 'Create Account'}
               </Text>
             </TouchableOpacity>
+            <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+              <ActionButton title="Privacy policy" secondary onPress={() => openHelp('privacy')} />
+              {success ? <>
+                <ActionButton title="Continue to sign in" onPress={() => navigation.replace('Login')} />
+                <ActionButton title="Resend verification email" secondary onPress={() => openHelp('verification')} />
+              </> : null}
+            </View>
           </View>
         </View>
 

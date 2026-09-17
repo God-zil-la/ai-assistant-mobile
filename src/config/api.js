@@ -15,13 +15,13 @@ export function getConversationEndpoint(
 ) {
   return (
     `${API_ENDPOINTS.conversations}` +
-    `${conversationId}/`
+    `${encodeURIComponent(conversationId)}/`
   );
 }
 
 export function getBotChatEndpoint(botId) {
   return (
     `${API_BASE_URL}/bots/api/bot/` +
-    `${botId}/chat/`
+    `${encodeURIComponent(botId)}/chat/`
   );
 }

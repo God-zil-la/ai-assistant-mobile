@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import ActionButton from '../components/ActionButton';
+import { getCurrentUser } from '../services/authService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useState } from 'react';
 
 import {
   ActivityIndicator,
-  SafeAreaView,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,8 +27,7 @@ export default function HomeScreen({ navigation, route }) {
   const [loadingBots, setLoadingBots] = useState(true);
   const [botsError, setBotsError] = useState('');
 
-  const user = route.params?.user;
-  const refreshBots = route.params?.refreshBots;
+  const [user, setUser] = useState(route.params?.user);
 
   const loadBots = useCallback(async () => {
     setLoadingBots(true);
@@ -37,7 +40,8 @@ export default function HomeScreen({ navigation, route }) {
         throw new Error('Your session has expired.');
       }
 
-      const data = await getBots(token);
+      const [data, profile] = await Promise.all([getBots(token), getCurrentUser(token)]);
+      setUser(profile);
 
       setBots(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -49,9 +53,9 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     loadBots();
-  }, [loadBots, refreshBots]);
+  }, [loadBots]));
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -63,6 +67,8 @@ export default function HomeScreen({ navigation, route }) {
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
+    } catch {
+      setBotsError('Unable to sign out. Please try again.');
     } finally {
       setLoggingOut(false);
     }
@@ -91,6 +97,7 @@ export default function HomeScreen({ navigation, route }) {
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={loadingBots} onRefresh={loadBots} tintColor={colors.primary} />}
       >
         <View style={styles.content}>
           <Text style={styles.title}>
@@ -119,6 +126,10 @@ export default function HomeScreen({ navigation, route }) {
             </Text>
           </View>
 
+          <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
+            <ActionButton title="All conversations" secondary onPress={() => navigation.navigate('Conversations')} />
+            <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
+          </View>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>
