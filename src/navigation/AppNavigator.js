@@ -7,6 +7,8 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import CreateBotScreen from '../screens/CreateBotScreen';
+import EditBotScreen from '../screens/EditBotScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -89,6 +91,22 @@ export default function AppNavigator() {
           }}
           options={{
             headerShown: false,
+          }}
+        />
+
+        <Stack.Screen
+          name="CreateBot"
+          component={CreateBotScreen}
+          options={{
+            title: 'Create Assistant',
+          }}
+        />
+
+        <Stack.Screen
+          name="EditBot"
+          component={EditBotScreen}
+          options={{
+            title: 'Edit Assistant',
           }}
         />
 
