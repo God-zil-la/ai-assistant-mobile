@@ -7,6 +7,8 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import ChatScreen from '../screens/ChatScreen';
+import ConversationsScreen from '../screens/ConversationsScreen';
 import CreateBotScreen from '../screens/CreateBotScreen';
 import EditBotScreen from '../screens/EditBotScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -107,6 +109,22 @@ export default function AppNavigator() {
           component={EditBotScreen}
           options={{
             title: 'Edit Assistant',
+          }}
+        />
+
+        <Stack.Screen
+          name="Conversations"
+          component={ConversationsScreen}
+          options={{
+            title: 'Conversations',
+          }}
+        />
+
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{
+            title: 'Chat',
           }}
         />
 

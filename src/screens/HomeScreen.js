@@ -78,6 +78,12 @@ export default function HomeScreen({ navigation, route }) {
     });
   }
 
+  function handleOpenConversations(bot) {
+    navigation.navigate('Conversations', {
+      bot,
+    });
+  }
+
   const planName = user?.plan?.toUpperCase() || 'FREE';
 
   return (
@@ -226,6 +232,18 @@ export default function HomeScreen({ navigation, route }) {
                     {bot.personality}
                   </Text>
                 ) : null}
+
+                <TouchableOpacity
+                  style={styles.chatButton}
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    handleOpenConversations(bot)
+                  }
+                >
+                  <Text style={styles.chatButtonText}>
+                    Open Chat
+                  </Text>
+                </TouchableOpacity>
               </View>
             ))}
 
@@ -461,6 +479,21 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
+  },
+
+  chatButton: {
+    width: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+
+  chatButtonText: {
+    color: colors.primaryText,
+    fontSize: 15,
+    fontWeight: '800',
   },
 
   signOutButton: {
