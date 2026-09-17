@@ -22,6 +22,7 @@ const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState(null);
+  const [initialUser, setInitialUser] = useState(null);
 
   useEffect(() => {
     async function checkAuthSession() {
@@ -33,7 +34,9 @@ export default function AppNavigator() {
           return;
         }
 
-        await getCurrentUser(token);
+        const user = await getCurrentUser(token);
+
+        setInitialUser(user);
         setInitialRoute('Home');
       } catch {
         await clearAuthSession();
@@ -47,7 +50,10 @@ export default function AppNavigator() {
   if (!initialRoute) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+        />
       </View>
     );
   }
@@ -78,6 +84,9 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
+          initialParams={{
+            user: initialUser,
+          }}
           options={{
             headerShown: false,
           }}

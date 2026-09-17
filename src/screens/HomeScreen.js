@@ -11,8 +11,10 @@ import {
 import { clearAuthSession } from '../services/tokenService';
 import { colors, radius, spacing } from '../styles/theme';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const user = route.params?.user;
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -36,7 +38,15 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.title}>AI Assistant</Text>
 
           <Text style={styles.subtitle}>
-            You are signed in.
+            Signed in as {user?.username || 'User'}
+          </Text>
+
+          <Text style={styles.profileText}>
+            {user?.email || ''}
+          </Text>
+
+          <Text style={styles.profileText}>
+            Plan: {user?.plan?.toUpperCase() || 'FREE'}
           </Text>
 
           <TouchableOpacity
@@ -88,7 +98,13 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.textMuted,
     fontSize: 16,
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.lg,
+  },
+
+  profileText: {
+    color: colors.textMuted,
+    fontSize: 15,
+    marginBottom: spacing.sm,
   },
 
   button: {
@@ -97,6 +113,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
+    marginTop: spacing.xl,
   },
 
   buttonDisabled: {

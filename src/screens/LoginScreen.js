@@ -9,8 +9,10 @@ import {
   View,
 } from 'react-native';
 
-
-import { loginUser } from '../services/authService';
+import {
+  getCurrentUser,
+  loginUser,
+} from '../services/authService';
 import { saveAuthSession } from '../services/tokenService';
 import { colors, radius, spacing } from '../styles/theme';
 
@@ -31,11 +33,21 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
 
     try {
-      const data = await loginUser(username.trim(), password);
+      const data = await loginUser(
+        username.trim(),
+        password,
+      );
 
-      await saveAuthSession(data.token, data.username);
+      await saveAuthSession(
+        data.token,
+        data.username,
+      );
 
-      navigation.replace('Home');
+      const user = await getCurrentUser(data.token);
+
+      navigation.replace('Home', {
+        user,
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -46,61 +58,55 @@ export default function LoginScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View>
-          <Text style={styles.title}>Sign In</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>Welcome Back</Text>
 
           <Text style={styles.subtitle}>
             Sign in to your AI Assistant account.
           </Text>
 
-          <View style={styles.form}>
-            <Text style={styles.label}>Username</Text>
+          <TextInput
+            style={styles.input}
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Username"
+            placeholderTextColor={colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+          />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your username"
-              placeholderTextColor={colors.textSubtle}
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={username}
-              onChangeText={setUsername}
-              editable={!loading}
-            />
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor={colors.textMuted}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            onSubmitEditing={handleLogin}
+          />
 
-            <Text style={styles.label}>Password</Text>
+          {error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor={colors.textSubtle}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={password}
-              onChangeText={setPassword}
-              editable={!loading}
-              onSubmitEditing={handleLogin}
-            />
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <TouchableOpacity
-              style={[
-                styles.button,
-                loading && styles.buttonDisabled,
-              ]}
-              activeOpacity={0.8}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              loading && styles.buttonDisabled,
+            ]}
+            activeOpacity={0.8}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Signing In...' : 'Sign In'}
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.footer}>AI Assistant</Text>
       </View>
     </SafeAreaView>
   );
@@ -114,56 +120,53 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    padding: spacing.xl,
-    justifyContent: 'space-between',
     backgroundColor: colors.background,
+    padding: spacing.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  content: {
+    width: '100%',
+    maxWidth: 420,
   },
 
   title: {
     color: colors.text,
     fontSize: 32,
     fontWeight: '800',
-    marginTop: spacing.xxl,
+    textAlign: 'center',
     marginBottom: spacing.sm,
   },
 
   subtitle: {
     color: colors.textMuted,
     fontSize: 16,
-    lineHeight: 23,
-  },
-
-  form: {
-    marginTop: spacing.xxl,
-  },
-
-  label: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
+    textAlign: 'center',
+    marginBottom: spacing.xxl,
   },
 
   input: {
+    width: '100%',
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    borderRadius: radius.md,
     color: colors.text,
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: 14,
-    marginBottom: spacing.lg,
+    fontSize: 16,
+    marginBottom: spacing.md,
   },
 
   error: {
     color: colors.error,
     fontSize: 14,
-    lineHeight: 20,
     marginBottom: spacing.md,
   },
 
   button: {
+    width: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: 15,
@@ -179,11 +182,5 @@ const styles = StyleSheet.create({
     color: colors.primaryText,
     fontSize: 16,
     fontWeight: '800',
-  },
-
-  footer: {
-    color: colors.textSubtle,
-    fontSize: 13,
-    textAlign: 'center',
   },
 });
