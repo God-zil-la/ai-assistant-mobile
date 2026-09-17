@@ -37,6 +37,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "98e64857-d974-4c3c-b60d-2993635f18e9"
+      }
+    },
+    "owner": "ai-assistants"
   }
 }
