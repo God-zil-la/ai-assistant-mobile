@@ -110,11 +110,19 @@ export default function ChatScreen({ route, navigation }) {
     } catch { setError('Unable to share this conversation. You can select and copy individual messages.'); }
   }
   const blocked = busy || loading || recovery || !conversation;
+  function scrollToActiveContent() {
+    if (editing || error) list.current?.scrollToOffset({ offset: 0, animated: false });
+    else list.current?.scrollToEnd({ animated: false });
+  }
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
-      <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={headerHeight}>
+      <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined} keyboardVerticalOffset={headerHeight}>
         <View style={styles.container}>
-          <View style={styles.header}>
+          <FlatList ref={list} data={conversation?.messages || []} keyExtractor={(item) => String(item.id)}
+              style={styles.messages} contentContainerStyle={styles.messageContent} keyboardShouldPersistTaps="handled"
+              onContentSizeChange={scrollToActiveContent}
+              onLayout={scrollToActiveContent}
+              ListHeaderComponent={<View style={styles.header}>
             <Text numberOfLines={2} style={styles.title}>{conversation?.title || 'Untitled conversation'}</Text>
             <Text style={styles.muted}>{conversation?.bot_name || bot?.name || 'Assistant'}</Text>
             {editing ? <View style={styles.editor}>
@@ -130,12 +138,8 @@ export default function ChatScreen({ route, navigation }) {
             {notice ? <Text style={styles.muted} accessibilityLiveRegion="polite">{notice}</Text> : null}
             {error ? <View style={styles.editor}><Text accessibilityRole="alert" style={styles.error}>{error}</Text>
               <ActionButton title="Refresh chat" secondary disabled={busy || loading} onPress={refresh} /></View> : null}
-          </View>
-          {loading && !conversation ? <ActivityIndicator style={styles.loader} color={colors.primary} /> :
-            <FlatList ref={list} data={conversation?.messages || []} keyExtractor={(item) => String(item.id)}
-              style={styles.messages} contentContainerStyle={styles.messageContent} keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
-              ListEmptyComponent={!error ? <Text style={styles.muted}>Send a message to start this conversation.</Text> : null}
+          </View>}
+              ListEmptyComponent={loading ? <ActivityIndicator color={colors.primary} /> : !error ? <Text style={styles.muted}>Send a message to start this conversation.</Text> : null}
               ListFooterComponent={busy && !editing ? <Text style={styles.muted} accessibilityLiveRegion="polite">Waiting for your assistant…</Text> : null}
               renderItem={({ item }) => {
                 const user = item.sender === 'user';
@@ -144,7 +148,7 @@ export default function ChatScreen({ route, navigation }) {
                   <MessageText style={[styles.message, user && styles.darkText]} message={item.message} />
                   <Text style={[styles.date, user && styles.darkText]}>{formatDate(item.timestamp)}</Text>
                 </View>;
-              }} />}
+              }} />
           <View style={styles.composer}>
             <TextInput value={message} onChangeText={setMessage} multiline style={[styles.input, styles.draft]}
               placeholder="Message your assistant…" placeholderTextColor={colors.textMuted} editable={!busy}
@@ -160,11 +164,11 @@ export default function ChatScreen({ route, navigation }) {
 const makeStyles = (colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, width: '100%', maxWidth: 800, alignSelf: 'center' },
-  header: { padding: spacing.lg, gap: spacing.sm }, title: { color: colors.text, fontSize: 22, fontWeight: '800' },
+  header: { gap: spacing.sm }, title: { color: colors.text, fontSize: 22, fontWeight: '800' },
   muted: { color: colors.textMuted, lineHeight: 21 }, actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, action: { flex: 1 },
   editor: { gap: spacing.sm }, error: { color: colors.error, lineHeight: 21 },
   input: { backgroundColor: colors.surface, color: colors.text, borderWidth: 1, borderColor: colors.surfaceBorder, borderRadius: radius.md, padding: spacing.md, fontSize: 16 },
-  loader: { flex: 1 }, messages: { flex: 1 }, messageContent: { padding: spacing.lg, gap: spacing.md },
+  messages: { flex: 1 }, messageContent: { padding: spacing.lg, gap: spacing.md },
   bubble: { maxWidth: '92%', borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
   userBubble: { alignSelf: 'flex-end', backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border },
   assistantBubble: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },

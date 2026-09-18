@@ -31,6 +31,7 @@ const server = http.createServer((req, res) => {
     let failHistory = false;
     let chatCalls = 0;
     let chatMode = 'historyFailure';
+    let analyticsData = { bot_data: { labels: ['Travel guide', 'Second assistant'], counts: [2, 3] }, time_data: { labels: ['2026-09-17', '2026-09-18'], counts: [0, 5] } };
     const bot = { id: 7, name: 'Travel guide', description: 'Plan your next trip', personality: 'Helpful', category: 'travel' };
     const conversation = { conversation_id: 'abc', bot_id: 7, bot_name: bot.name, title: 'Weekend in Stockholm', message_count: 2,
       updated_at: '2026-09-17T12:00:00Z', messages: [
@@ -48,7 +49,7 @@ const server = http.createServer((req, res) => {
         if (failMe === 401) { status = 401; data = { detail: 'Invalid token' }; }
         else data = { username: 'Demo', email: 'demo@example.test', plan: 'premium' };
       } else if (pathname.endsWith('/api/dashboard/')) data = { current_plan: 'premium', message_count: 12, message_limit: 3000, bot_count: 1, bot_limit: 5, knowledge_used_display: '0.02 MB', knowledge_limit_display: '250 MB' };
-      else if (pathname.endsWith('/api/analytics/')) data = { bot_data: { labels: [bot.name], counts: [2] }, time_data: { labels: ['2026-09-17'], counts: [2] } };
+      else if (pathname.endsWith('/api/analytics/')) data = analyticsData;
       else if (pathname.endsWith('/knowledge/')) {
         if (request.method() === 'POST') {
           assert.match(request.headers()['content-type'], /multipart\/form-data; boundary=/);
@@ -92,10 +93,24 @@ const server = http.createServer((req, res) => {
     await page.getByRole('button', { name: 'Analytics', exact: true }).click();
     await page.getByText('Messages by Assistant', { exact: true }).waitFor();
     await page.getByText('Messages Over Time', { exact: true }).waitFor();
-    for (const viewport of [{ width: 360, height: 800 }, { width: 393, height: 852 }, { width: 768, height: 1024 }, { width: 1000, height: 700 }]) {
+    assert.equal(await page.getByText('Message Count: 5', { exact: true }).count(), 2);
+    for (const viewport of [{ width: 320, height: 640 }, { width: 360, height: 800 }, { width: 393, height: 852 }, { width: 768, height: 1024 }, { width: 1000, height: 700 }]) {
       await page.setViewportSize(viewport);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      for (const label of analyticsData.time_data.labels) {
+        assert.ok(await page.getByText(label, { exact: true }).evaluate(element =>
+          getComputedStyle(element).whiteSpace === 'nowrap' && element.scrollWidth <= element.clientWidth));
+      }
       await page.screenshot({ path: path.join(__dirname, `../.expo/analytics-${viewport.width}.png`), fullPage: true });
+    }
+    for (const dataset of [{ labels: ['2026-09-18'], counts: [0] }, { labels: [], counts: [] }]) {
+      analyticsData = { bot_data: dataset, time_data: dataset };
+      await page.goto(origin);
+      await page.getByRole('button', { name: 'Dashboard', exact: true }).click();
+      await page.getByRole('button', { name: 'Analytics', exact: true }).click();
+      await page.getByText('Message Count: 0', { exact: true }).first().waitFor();
+      assert.equal(await page.getByText('Message Count: 0', { exact: true }).count(), 2);
+      if (!dataset.labels.length) assert.equal(await page.getByText('No messages yet.', { exact: true }).count(), 2);
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(origin);
@@ -143,6 +158,16 @@ const server = http.createServer((req, res) => {
     await page.getByRole('textbox', { name: 'Search conversations' }).fill('stockholm');
     await page.getByRole('button', { name: 'Open Weekend in Stockholm' }).click();
     await page.getByText('Explore the old town and waterfront.').waitFor();
+    await page.setViewportSize({ width: 390, height: 400 });
+    await page.waitForFunction(([last, input, send]) => {
+      const message = last.getBoundingClientRect();
+      const composer = input.getBoundingClientRect();
+      const button = send.getBoundingClientRect();
+      return message.top >= 64 && message.bottom <= composer.top && button.bottom <= window.innerHeight;
+    }, [await page.getByText('Explore the old town and waterfront.').elementHandle(),
+      await page.getByRole('textbox', { name: 'Message your assistant' }).elementHandle(),
+      await page.getByRole('button', { name: 'Send', exact: true }).elementHandle()]);
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'Rename', exact: true }).click();
     await page.getByRole('textbox', { name: 'Conversation title', exact: true }).fill('Autumn trip');
     await page.getByRole('button', { name: 'Save title' }).click();

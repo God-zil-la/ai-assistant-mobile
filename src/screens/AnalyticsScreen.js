@@ -6,7 +6,7 @@ import Panel from '../components/Panel';
 import ActionButton from '../components/ActionButton';
 import { getAnalytics } from '../services/parityService';
 import { useTheme } from '../styles/theme';
-function Chart({ title, data, color }) {
+function Chart({ title, data, color, dateLabels = false }) {
   const { colors } = useTheme();
   const maximum = Math.max(1, ...data.counts);
   return <Panel><Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>{title}</Text>
@@ -18,11 +18,11 @@ function Chart({ title, data, color }) {
             <View style={{ height: 200, width: 48, justifyContent: 'flex-end', borderBottomWidth: 1, borderColor: colors.border }}>
               <View style={{ height: 200 * data.counts[index] / maximum, backgroundColor: color, borderTopLeftRadius: 6, borderTopRightRadius: 6 }} />
             </View>
-            <Text style={{ color: colors.text, textAlign: 'center', minHeight: 48 }}>{label}</Text>
+            <Text numberOfLines={dateLabels ? 1 : undefined} adjustsFontSizeToFit={dateLabels} style={{ color: colors.text, textAlign: 'center', minHeight: 48, width: '100%' }}>{label}</Text>
           </View>)}
         </View>
       </ScrollView>}
-    <Text style={{ color: colors.textMuted }}>Message Count</Text>
+    <Text style={{ color: colors.textMuted }}>Message Count: {data.counts.reduce((total, count) => total + count, 0)}</Text>
   </Panel>;
 }
 export default function AnalyticsScreen() {
@@ -42,6 +42,6 @@ export default function AnalyticsScreen() {
     {loading ? <ActivityIndicator color={colors.primary} /> : null}
     {error ? <><Text accessibilityRole="alert" style={{ color: colors.error }}>{error}</Text><ActionButton title="Retry analytics" onPress={load} disabled={loading} /></> : null}
     {data ? <><Chart title="Messages by Assistant" data={data.bot_data} color="rgba(240,165,0,0.85)" />
-      <Chart title="Messages Over Time" data={data.time_data} color="rgba(54,162,235,0.85)" /></> : null}
+      <Chart title="Messages Over Time" data={data.time_data} color="rgba(54,162,235,0.85)" dateLabels /></> : null}
   </Screen>;
 }
