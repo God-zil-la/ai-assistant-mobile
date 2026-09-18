@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.mrhusse.aiassistant",
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#0a0f1f",
         "foregroundImage": "./assets/android-icon-foreground.png",
