@@ -1,5 +1,10 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import CategoryPicker from '../components/CategoryPicker';
+import AssistantPreferences from '../components/AssistantPreferences';
+import AssistantErrors from '../components/AssistantErrors';
+import { preferencesFor } from '../config/assistantPreferences';
+import { validateAssistant, assistantApiErrors } from '../utils/assistantValidation';
+import { descriptionHelp, personalityHelp } from '../config/assistantHelp';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
@@ -37,13 +42,15 @@ export default function EditBotScreen({
     bot?.description || '',
   );
   const [personality, setPersonality] = useState(
-    bot?.personality ||
+    bot?.personality ??
       'I am a helpful and friendly assistant.',
   );
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [preferences, setPreferences] = useState(() => preferencesFor(bot));
 
   async function handleSave() {
     setError('');
@@ -53,8 +60,9 @@ export default function EditBotScreen({
       return;
     }
 
-    if (!name.trim()) {
-      setError('Please enter a name for your assistant.');
+    const errors = validateAssistant({ name, description, personality, category, ...preferences });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
       return;
     }
 
@@ -75,6 +83,7 @@ export default function EditBotScreen({
           description: description.trim(),
           personality: personality.trim(),
           category,
+          ...preferences,
         },
       );
 
@@ -82,9 +91,9 @@ export default function EditBotScreen({
         refreshBots: Date.now(),
       });
     } catch (err) {
-      setError(
-        err.message || 'Unable to update the assistant.',
-      );
+      const errors = assistantApiErrors(err);
+      setFieldErrors(errors);
+      setError(Object.keys(errors).length ? '' : err.message || 'Unable to update the assistant.');
     } finally {
       setSaving(false);
     }
@@ -199,10 +208,10 @@ export default function EditBotScreen({
           <TextInput
             style={styles.input}
             value={name}
+            accessibilityLabel="Assistant name"
             onChangeText={setName}
             placeholder="Assistant name"
             placeholderTextColor={colors.textMuted}
-            maxLength={100}
             editable={!busy}
           />
 
@@ -216,6 +225,8 @@ export default function EditBotScreen({
               styles.multilineInput,
             ]}
             value={description}
+            accessibilityLabel="Description"
+            accessibilityHint={descriptionHelp}
             onChangeText={setDescription}
             placeholder="What does this assistant do?"
             placeholderTextColor={colors.textMuted}
@@ -224,8 +235,10 @@ export default function EditBotScreen({
             editable={!busy}
           />
 
+          <Text style={styles.help}>{descriptionHelp}</Text>
+
           <Text style={styles.label}>
-            Personality
+            Personality & instructions
           </Text>
 
           <TextInput
@@ -234,6 +247,8 @@ export default function EditBotScreen({
               styles.multilineInput,
             ]}
             value={personality}
+            accessibilityLabel="Personality & instructions"
+            accessibilityHint={personalityHelp}
             onChangeText={setPersonality}
             placeholder="Describe how the assistant should behave."
             placeholderTextColor={colors.textMuted}
@@ -242,7 +257,11 @@ export default function EditBotScreen({
             editable={!busy}
           />
 
+          <Text style={styles.help}>{personalityHelp}</Text>
+
 <CategoryPicker value={category} onChange={setCategory} disabled={busy} />
+          <AssistantPreferences values={preferences} onChange={setPreferences} disabled={busy} />
+          <AssistantErrors errors={fieldErrors} />
 
           {error ? (
             <View style={styles.errorCard}>
@@ -364,6 +383,13 @@ const makeStyles = (colors) => StyleSheet.create({
 
   multilineInput: {
     minHeight: 110,
+  },
+
+  help: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: spacing.lg,
   },
 
   categoryText: {

@@ -1,4 +1,5 @@
 import ThemeControl from '../components/ThemeControl';
+import { assistantIcon } from '../config/assistantPreferences';
 import Footer from '../components/Footer';
 import { openAccountLink, openDiscordSetup } from '../services/externalLinks';
 import { useFocusEffect } from '@react-navigation/native';
@@ -222,7 +223,7 @@ export default function HomeScreen({ navigation, route }) {
               >
                 <View style={styles.botHeader}>
                   <Text style={styles.botName}>
-                    {bot.name}
+                    {assistantIcon(bot.avatar_icon) ? `${assistantIcon(bot.avatar_icon)} ` : ''}{bot.name}
                   </Text>
 
                   <TouchableOpacity

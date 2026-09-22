@@ -28,7 +28,7 @@
     "test": "node --test tests/*.test.mjs",
     "lint": "eslint .",
     "export:all": "expo export --platform all",
-    "test:ui": "node tests/ui-smoke.cjs"
+    "test:ui": "node tests/ui-smoke.cjs && node tests/assistant-ui.cjs"
   },
   "private": true,
   "devDependencies": {

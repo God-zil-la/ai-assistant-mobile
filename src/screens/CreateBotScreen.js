@@ -1,5 +1,10 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import CategoryPicker from '../components/CategoryPicker';
+import AssistantPreferences from '../components/AssistantPreferences';
+import AssistantErrors from '../components/AssistantErrors';
+import { defaultPreferences } from '../config/assistantPreferences';
+import { validateAssistant, assistantApiErrors } from '../utils/assistantValidation';
+import { descriptionHelp, personalityHelp } from '../config/assistantHelp';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 
@@ -30,12 +35,15 @@ export default function CreateBotScreen({ navigation }) {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [preferences, setPreferences] = useState(defaultPreferences);
 
   async function handleCreate() {
     setError('');
 
-    if (!name.trim()) {
-      setError('Please enter a name for your assistant.');
+    const errors = validateAssistant({ name, description, personality, category, ...preferences });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
       return;
     }
 
@@ -53,15 +61,16 @@ export default function CreateBotScreen({ navigation }) {
         description: description.trim(),
         personality: personality.trim(),
         category,
+        ...preferences,
       });
 
       navigation.popTo('Home', {
         refreshBots: Date.now(),
       });
     } catch (err) {
-      setError(
-        err.message || 'Unable to create your assistant.',
-      );
+      const errors = assistantApiErrors(err);
+      setFieldErrors(errors);
+      setError(Object.keys(errors).length ? '' : err.message || 'Unable to create your assistant.');
     } finally {
       setLoading(false);
     }
@@ -90,10 +99,10 @@ export default function CreateBotScreen({ navigation }) {
           <TextInput
             style={styles.input}
             value={name}
+            accessibilityLabel="Assistant name"
             onChangeText={setName}
             placeholder="Assistant name"
             placeholderTextColor={colors.textMuted}
-            maxLength={100}
             editable={!loading}
           />
 
@@ -107,6 +116,8 @@ export default function CreateBotScreen({ navigation }) {
               styles.multilineInput,
             ]}
             value={description}
+            accessibilityLabel="Description"
+            accessibilityHint={descriptionHelp}
             onChangeText={setDescription}
             placeholder="What does this assistant do?"
             placeholderTextColor={colors.textMuted}
@@ -115,8 +126,10 @@ export default function CreateBotScreen({ navigation }) {
             editable={!loading}
           />
 
+          <Text style={styles.help}>{descriptionHelp}</Text>
+
           <Text style={styles.label}>
-            Personality
+            Personality & instructions
           </Text>
 
           <TextInput
@@ -125,6 +138,8 @@ export default function CreateBotScreen({ navigation }) {
               styles.multilineInput,
             ]}
             value={personality}
+            accessibilityLabel="Personality & instructions"
+            accessibilityHint={personalityHelp}
             onChangeText={setPersonality}
             placeholder="Describe how the assistant should behave."
             placeholderTextColor={colors.textMuted}
@@ -133,7 +148,11 @@ export default function CreateBotScreen({ navigation }) {
             editable={!loading}
           />
 
+          <Text style={styles.help}>{personalityHelp}</Text>
+
 <CategoryPicker value={category} onChange={setCategory} disabled={loading} />
+          <AssistantPreferences values={preferences} onChange={setPreferences} disabled={loading} />
+          <AssistantErrors errors={fieldErrors} />
 
           {error ? (
             <View style={styles.errorCard}>
@@ -232,6 +251,13 @@ const makeStyles = (colors) => StyleSheet.create({
 
   multilineInput: {
     minHeight: 110,
+  },
+
+  help: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: spacing.lg,
   },
 
   categoryText: {

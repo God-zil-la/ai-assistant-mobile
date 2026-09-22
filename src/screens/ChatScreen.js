@@ -1,4 +1,5 @@
 import MessageText from '../components/MessageText';
+import { assistantIcon } from '../config/assistantPreferences';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -124,7 +125,8 @@ export default function ChatScreen({ route, navigation }) {
               onLayout={scrollToActiveContent}
               ListHeaderComponent={<View style={styles.header}>
             <Text numberOfLines={2} style={styles.title}>{conversation?.title || 'Untitled conversation'}</Text>
-            <Text style={styles.muted}>{conversation?.bot_name || bot?.name || 'Assistant'}</Text>
+            <Text style={styles.muted}>{assistantIcon(conversation?.bot_avatar_icon ?? bot?.avatar_icon) ? `${assistantIcon(conversation?.bot_avatar_icon ?? bot?.avatar_icon)} ` : ''}{conversation?.bot_name || bot?.name || 'Assistant'}</Text>
+            <Text style={styles.muted}>🌍 You can chat in many languages — just write in the language you prefer.</Text>
             {editing ? <View style={styles.editor}>
               <TextInput value={title} onChangeText={setTitle} maxLength={200} style={styles.input} editable={!busy}
                 accessibilityLabel="Conversation title" placeholder="Conversation title" placeholderTextColor={colors.textMuted} autoFocus />

@@ -32,8 +32,8 @@ const server = http.createServer((req, res) => {
     let chatCalls = 0;
     let chatMode = 'historyFailure';
     let analyticsData = { bot_data: { labels: ['Travel guide', 'Second assistant'], counts: [2, 3] }, time_data: { labels: ['2026-09-17', '2026-09-18'], counts: [0, 5] } };
-    const bot = { id: 7, name: 'Travel guide', description: 'Plan your next trip', personality: 'Helpful', category: 'travel' };
-    const conversation = { conversation_id: 'abc', bot_id: 7, bot_name: bot.name, title: 'Weekend in Stockholm', message_count: 2,
+    const bot = { id: 7, name: 'Travel guide', description: 'Plan your next trip', personality: 'Helpful', category: 'travel', avatar_icon: 'book' };
+    const conversation = { conversation_id: 'abc', bot_id: 7, bot_name: bot.name, bot_avatar_icon: 'book', title: 'Weekend in Stockholm', message_count: 2,
       updated_at: '2026-09-17T12:00:00Z', messages: [
         { id: 1, sender: 'user', message: 'Where should I go?', timestamp: '2026-09-17T12:00:00Z' },
         { id: 2, sender: 'bot', message: 'Explore the old town and waterfront.', timestamp: '2026-09-17T12:00:01Z' },
@@ -80,6 +80,13 @@ const server = http.createServer((req, res) => {
     await context.addInitScript(() => { localStorage.setItem('auth_token', 'mock-token'); });
     const origin = `http://127.0.0.1:${server.address().port}`;
     await page.goto(origin);
+    await page.getByText('Signed in as Demo').waitFor();
+    await page.getByText('+ Create', { exact: true }).click();
+    await page.getByText('Describe what your assistant helps with', { exact: false }).waitFor();
+    await page.getByText('Describe its tone, response style', { exact: false }).waitFor();
+    assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), 'I am a helpful and friendly assistant.');
+    await page.screenshot({ path: path.join(__dirname, '../.expo/u1-create.png'), fullPage: true });
+    await page.getByText('Cancel', { exact: true }).click();
     await page.getByText('Signed in as Demo').waitFor();
     await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
     assert.equal(await page.evaluate(() => localStorage.getItem('theme')), 'dark');
@@ -146,18 +153,27 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), 'mock-token');
     await page.goto(origin);
     await page.getByText('Edit', { exact: true }).click();
+    await page.getByText('Describe what your assistant helps with', { exact: false }).waitFor();
+    await page.getByText('Describe its tone, response style', { exact: false }).waitFor();
+    assert.equal(await page.getByRole('textbox', { name: 'Description', exact: true }).inputValue(), bot.description);
+    assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), bot.personality);
+    await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).fill('Be concise. Ask about the budget first.');
+    await page.screenshot({ path: path.join(__dirname, '../.expo/u1-edit.png'), fullPage: true });
     await page.getByRole('button', { name: 'Choose category, currently Travel' }).click();
     await page.getByRole('textbox', { name: 'Search categories' }).fill('tech');
     await page.getByRole('button', { name: 'Technology', exact: true }).click();
     await page.getByText('Save Changes', { exact: true }).click();
     await page.getByText('Signed in as Demo').waitFor();
     assert.equal(bot.category, 'technology');
+    assert.equal(bot.personality, 'Be concise. Ask about the budget first.');
+    assert.equal(bot.description, 'Plan your next trip');
     await page.getByRole('button', { name: 'All conversations', exact: true }).click();
     await page.getByRole('textbox', { name: 'Search conversations' }).fill('unmatched');
     await page.getByText('No matching conversations.').waitFor();
     await page.getByRole('textbox', { name: 'Search conversations' }).fill('stockholm');
     await page.getByRole('button', { name: 'Open Weekend in Stockholm' }).click();
     await page.getByText('Explore the old town and waterfront.').waitFor();
+    await page.getByText('📚 Travel guide', { exact: true }).last().waitFor();
     await page.setViewportSize({ width: 390, height: 400 });
     await page.waitForFunction(([last, input, send]) => {
       const message = last.getBoundingClientRect();
@@ -174,6 +190,7 @@ const server = http.createServer((req, res) => {
     await page.getByText('Conversation renamed.').waitFor();
     assert.equal(conversation.title, 'Autumn trip');
     await page.screenshot({ path: path.join(__dirname, '../.expo/chat-preview.png') });
+    await page.getByText('🌍 You can chat in many languages — just write in the language you prefer.', { exact: true }).waitFor();
     await page.getByRole('textbox', { name: 'Message your assistant' }).fill('Hello again');
     await page.getByRole('button', { name: 'Send', exact: true }).click();
     await page.getByText('Message sent, but the updated history could not be loaded.', { exact: false }).waitFor();
@@ -211,6 +228,8 @@ const server = http.createServer((req, res) => {
     failMe = false;
     await page.getByRole('button', { name: 'Try again', exact: true }).click();
     await page.getByText('Signed in as Demo').waitFor();
+    // Finish Home's session refresh before simulating expiry on Account.
+    await page.waitForLoadState('networkidle');
     failMe = 401;
     await page.getByRole('button', { name: 'Account & Help', exact: true }).click();
     await page.getByText('Welcome Back', { exact: true }).waitFor();
