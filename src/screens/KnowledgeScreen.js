@@ -35,7 +35,7 @@ export default function KnowledgeScreen({ route }) {
     try {
       if (!bot?.id) throw new Error('Choose an assistant to manage its knowledge.');
       const data = await getKnowledge(bot.id);
-      if (!data || !Array.isArray(data.files) || !data.files.every(validRow)) throw new Error('Unable to verify the document list. Refresh knowledge again.');
+      if (!data || !Array.isArray(data.files) || !data.files.every(validRow)) throw new Error('Unable to verify the document list. Refresh file list again.');
       if (current()) {
         setFiles(data.files); setRecovery(false);
         setNotice('Knowledge list updated. Check whether your document is present before uploading again.');
@@ -114,7 +114,7 @@ export default function KnowledgeScreen({ route }) {
         <ActionButton title="Delete" accessibilityLabel={`Delete ${item.name}`} destructive disabled={busy || loading || recovery}
           onPress={() => { const scope = generation.current; confirmDelete('Delete knowledge', `Delete "${item.name}" from this assistant?`, () => remove(item, scope)); }} />
       </View>)}
-      <ActionButton title="Refresh knowledge" secondary disabled={busy || loading} onPress={load} />
+      <ActionButton title="Refresh file list" secondary disabled={busy || loading} onPress={load} />
     </Panel>
     <Panel><Text style={text}>Upload File (.txt, .pdf, .docx)</Text>
       <ActionButton title="Choose document" secondary disabled={busy || loading || recovery} onPress={pick} />

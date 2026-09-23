@@ -93,7 +93,7 @@ const footer = names => 'Useful answer.\n\n**Källor i sökunderlaget**\n' + nam
       return fulfill(route, { data });
     });
     const upload = () => page.getByRole('button', { name: 'Upload Knowledge', exact: true });
-    const refresh = () => page.getByRole('button', { name: 'Refresh knowledge', exact: true });
+    const refresh = () => page.getByRole('button', { name: 'Refresh file list', exact: true });
     async function open() {
       await page.goto(origin);
       if (!web) await page.getByRole('button', { name: 'Knowledge Base', exact: true }).first().click();
