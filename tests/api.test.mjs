@@ -89,3 +89,26 @@ test('multipart upload preserves the body and lets fetch set the boundary', asyn
   assert.deepEqual(await request('https://example.test', { token: 'valid', method: 'POST', body: form, multipart: true }), { id: 1 });
   assert.equal(calls, 1);
 });
+
+
+test('Knowledge expected success status rejects ambiguous 200/202/204 uploads', async () => {
+  for (const status of [200, 202, 204]) {
+    global.fetch = async () => status === 204 ? new Response(null, { status }) : json({ id: 1, name: 'fact.txt' }, status);
+    await assert.rejects(request('https://example.test', { method: 'POST', expectedStatus: 201 }), err => err.status === 0);
+  }
+  global.fetch = async () => json({ id: 1, name: 'fact.txt' }, 201);
+  assert.deepEqual(await request('https://example.test', { method: 'POST', expectedStatus: 201 }), { id: 1, name: 'fact.txt' });
+  global.fetch = async () => new Response(null, { status: 204 });
+  assert.equal(await request('https://example.test', { method: 'DELETE', expectedStatus: 204 }), null);
+});
+
+test('Knowledge errors preserve every status/code, including HTML 413, without retry', async () => {
+  for (const [status, code] of [[400, 'empty_content'], [400, 'encrypted_document'], [400, 'extraction_failed'], [403, 'knowledge_quota_exceeded'], [403, undefined], [413, 'processing_limit'], [503, 'embedding_failed'], [503, 'storage_failed'], [502, undefined], [503, undefined]]) {
+    let calls = 0;
+    global.fetch = async () => { calls++; return json({ error: 'Public error', code, plan: 'free' }, status); };
+    await assert.rejects(request('https://example.test', { method: 'POST', expectedStatus: 201 }), err => err.status === status && err.data.code === code);
+    assert.equal(calls, 1);
+  }
+  global.fetch = async () => new Response('<html>Too large</html>', { status: 413 });
+  await assert.rejects(request('https://example.test', { method: 'POST', expectedStatus: 201 }), err => err.status === 413 && err.data === null);
+});

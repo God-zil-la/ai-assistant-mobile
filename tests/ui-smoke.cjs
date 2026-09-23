@@ -16,7 +16,9 @@ const server = http.createServer((req, res) => {
   });
 });
 
-(async () => {
+if (process.argv.includes('--knowledge')) {
+  require('./knowledge-ui.cjs');
+} else (async () => {
   fs.mkdirSync(path.join(__dirname, '../.expo'), { recursive: true });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
@@ -54,7 +56,7 @@ const server = http.createServer((req, res) => {
         if (request.method() === 'POST') {
           assert.match(request.headers()['content-type'], /multipart\/form-data; boundary=/);
           if (uploadMode === 'uncertain') { await route.abort('internetdisconnected'); return; }
-          if (uploadMode === 'quota') { status = 403; data = { error: 'Knowledge storage limit reached.' }; }
+          if (uploadMode === 'quota') { status = 403; data = { error: 'Knowledge storage limit reached.', code: 'knowledge_quota_exceeded', plan: 'premium' }; }
           else { const item = { id: 2, name: 'uploaded.txt' }; knowledge.push(item); status = 201; data = item; }
         } else data = { files: knowledge };
       } else if (pathname.endsWith('/knowledge/2/')) { knowledge = knowledge.filter(item => item.id !== 2); await route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*' } }); return; }
@@ -149,7 +151,7 @@ const server = http.createServer((req, res) => {
     await page.getByText('Existing.txt', { exact: true }).waitFor();
     uploadMode = 'quota';
     await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
-    await page.getByText('Knowledge storage limit reached.', { exact: true }).waitFor();
+    await page.getByText('Knowledge storage limit reached for your premium plan.', { exact: false }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), 'mock-token');
     await page.goto(origin);
     await page.getByText('Edit', { exact: true }).click();
@@ -190,7 +192,21 @@ const server = http.createServer((req, res) => {
     await page.getByText('Conversation renamed.').waitFor();
     assert.equal(conversation.title, 'Autumn trip');
     await page.screenshot({ path: path.join(__dirname, '../.expo/chat-preview.png') });
-    await page.getByText('🌍 You can chat in many languages — just write in the language you prefer.', { exact: true }).waitFor();
+    const languageHint = page.getByText('🌍 You can chat in many languages — just write in the language you prefer.', { exact: true });
+    assert.equal(await languageHint.count(), 0); // edd9163: hide in existing history.
+    const reopenChat = async () => {
+      await page.goto(origin);
+      await page.getByRole('button', { name: 'All conversations', exact: true }).click();
+      await page.getByRole('button', { name: 'Open Autumn trip', exact: true }).click();
+    };
+    const savedMessages = conversation.messages;
+    conversation.messages = [];
+    await reopenChat();
+    await languageHint.waitFor();
+    conversation.messages = savedMessages;
+    await reopenChat();
+    await page.getByText('Explore the old town and waterfront.').waitFor();
+    assert.equal(await languageHint.count(), 0);
     await page.getByRole('textbox', { name: 'Message your assistant' }).fill('Hello again');
     await page.getByRole('button', { name: 'Send', exact: true }).click();
     await page.getByText('Message sent, but the updated history could not be loaded.', { exact: false }).waitFor();

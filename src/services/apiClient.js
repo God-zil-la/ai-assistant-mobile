@@ -25,7 +25,7 @@ function errorText(data) {
 }
 
 // A lost response can follow a committed write. Never retry mutations automatically.
-export async function request(url, { token, method = 'GET', body, multipart = false, timeout = 30000 } = {}) {
+export async function request(url, { token, method = 'GET', body, multipart = false, timeout = 30000, expectedStatus } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -38,6 +38,9 @@ export async function request(url, { token, method = 'GET', body, multipart = fa
       },
       ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}),
     });
+    if (response.ok && expectedStatus && response.status !== expectedStatus) {
+      throw new ApiError('The server returned an unexpected success status.');
+    }
     if (response.status === 204) return null;
     const data = await response.json().catch(() => null);
     if (!response.ok) {

@@ -10,10 +10,10 @@ async function authenticated(path, options) {
 export const getDashboard = () => authenticated('dashboard/');
 export const getAnalytics = () => authenticated('analytics/');
 const knowledgePath = (botId) => `bots/${encodeURIComponent(botId)}/knowledge/`;
-export const getKnowledge = (botId) => authenticated(knowledgePath(botId));
-export const deleteKnowledge = (botId, id) => authenticated(`${knowledgePath(botId)}${encodeURIComponent(id)}/`, { method: 'DELETE' });
+export const getKnowledge = (botId) => authenticated(knowledgePath(botId), { expectedStatus: 200 });
+export const deleteKnowledge = (botId, id) => authenticated(`${knowledgePath(botId)}${encodeURIComponent(id)}/`, { method: 'DELETE', expectedStatus: 204 });
 export function uploadKnowledge(botId, asset) {
   const body = new FormData();
   body.append('file', Platform.OS === 'web' ? asset.file : { uri: asset.uri, name: asset.name, type: asset.mimeType || 'application/octet-stream' });
-  return authenticated(knowledgePath(botId), { method: 'POST', body, multipart: true, timeout: 180000 });
+  return authenticated(knowledgePath(botId), { method: 'POST', body, multipart: true, timeout: 180000, expectedStatus: 201 });
 }
