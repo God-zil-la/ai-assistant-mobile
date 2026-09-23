@@ -147,7 +147,7 @@ if (process.argv.includes('--knowledge')) {
     await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
     await page.getByText('Upload could not be confirmed.', { exact: false }).waitFor();
     assert.equal(await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).isDisabled(), true);
-    await page.getByRole('button', { name: 'Refresh knowledge', exact: true }).click();
+    await page.getByRole('button', { name: 'Refresh file list', exact: true }).click();
     await page.getByText('Existing.txt', { exact: true }).waitFor();
     uploadMode = 'quota';
     await page.getByRole('button', { name: 'Upload Knowledge', exact: true }).click();
