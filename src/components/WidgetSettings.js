@@ -6,7 +6,7 @@ import { useTheme } from '../styles/theme';
 import ActionButton from './ActionButton';
 
 export default function WidgetSettings({ botId, disabled }) {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(true);
@@ -27,10 +27,19 @@ export default function WidgetSettings({ botId, disabled }) {
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
+  const themedPublicUrl = data?.public_url
+    ? `${data.public_url}${data.public_url.includes('?') ? '&' : '?'}theme=${mode}`
+    : '';
+
+  const themedEmbedCode = data?.embed_code && data?.public_url
+    ? data.embed_code.replace(data.public_url, themedPublicUrl)
+    : '';
+
   async function open() {
-    try { await Linking.openURL(data.public_url); }
+    try { await Linking.openURL(themedPublicUrl); }
     catch { setError('Unable to open the public chatbot.'); }
   }
+
   return <View style={{ paddingVertical: 16, gap: 10 }}>
     <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Website Widget / Public Chatbot</Text>
     <Text style={{ color: colors.textMuted }}>Pro only. Visitors use your assistant’s instructions and Knowledge. Their chats appear in Conversations and count toward your AI usage limits. Enable only for content you want to make public.</Text>
@@ -41,9 +50,9 @@ export default function WidgetSettings({ botId, disabled }) {
       {data.active ? <>
         <ActionButton title="Open public chatbot" secondary onPress={open} disabled={busy || disabled} />
         <Text style={{ color: colors.textMuted }}>Public link (select to copy)</Text>
-        <Text selectable style={{ color: colors.text }}>{data.public_url}</Text>
+        <Text selectable style={{ color: colors.text }}>{themedPublicUrl}</Text>
         <Text style={{ color: colors.textMuted }}>Website embed code (select to copy)</Text>
-        <Text selectable style={{ color: colors.text }}>{data.embed_code}</Text>
+        <Text selectable style={{ color: colors.text }}>{themedEmbedCode}</Text>
       </> : null}
     </> : busy ? <Text style={{ color: colors.textMuted }}>Loading widget settings…</Text> : null}
     {error ? <><Text accessibilityRole="alert" style={{ color: colors.error }}>{error}</Text>
