@@ -1,4 +1,5 @@
 import ThemeControl from '../components/ThemeControl';
+import CompactGrid from '../components/CompactGrid';
 import { assistantIcon } from '../config/assistantPreferences';
 import Footer from '../components/Footer';
 import { openAccountLink, openDiscordSetup } from '../services/externalLinks';
@@ -107,40 +108,23 @@ export default function HomeScreen({ navigation, route }) {
         refreshControl={<RefreshControl refreshing={loadingBots} onRefresh={loadBots} tintColor={colors.primary} />}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>
-            AI Assistant
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Signed in as {user?.username || 'User'}
-          </Text>
-
-          <ThemeControl />
           <View style={styles.profileCard}>
-            <Text style={styles.profileLabel}>
-              Email
-            </Text>
-
-            <Text style={styles.profileValue}>
-              {user?.email || '—'}
-            </Text>
-
-            <Text style={styles.profileLabel}>
-              Plan
-            </Text>
-
-            <Text style={styles.planText}>
-              {planName}
-            </Text>
+            <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+              <Text style={styles.title}>AI Assistant</Text>
+              <Text style={styles.subtitle}>Signed in as {user?.username || 'User'}</Text>
+              <Text selectable style={styles.profileValue}>{user?.email || '—'}</Text>
+              <Text style={styles.planText}>Plan · {planName}</Text>
+            </View>
+            <ThemeControl />
           </View>
 
-          <View style={{ gap: spacing.md, marginBottom: spacing.xl }}>
+          <View style={{ marginBottom: spacing.md }}><CompactGrid>
             <ActionButton title="Dashboard" secondary onPress={() => navigation.navigate('Dashboard')} />
             <ActionButton title="Analytics" secondary onPress={() => navigation.navigate('Analytics')} />
             <ActionButton title="Information Guide (PDF)" secondary onPress={() => openLink('guide')} />
             <ActionButton title="All conversations" secondary onPress={() => navigation.navigate('Conversations')} />
             <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
-          </View>
+          </CompactGrid></View>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>
@@ -216,7 +200,7 @@ export default function HomeScreen({ navigation, route }) {
 
           {!loadingBots &&
             !botsError &&
-            bots.map((bot) => (
+            <CompactGrid columns={1} tabletColumns={2}>{bots.map((bot) => (
               <View
                 key={bot.id}
                 style={styles.botCard}
@@ -226,17 +210,6 @@ export default function HomeScreen({ navigation, route }) {
                     {assistantIcon(bot.avatar_icon) ? `${assistantIcon(bot.avatar_icon)} ` : ''}{bot.name}
                   </Text>
 
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    activeOpacity={0.8}
-                    onPress={() =>
-                      handleEditAssistant(bot)
-                    }
-                  >
-                    <Text style={styles.editButtonText}>
-                      Edit
-                    </Text>
-                  </TouchableOpacity>
                 </View>
 
                 {bot.description ? (
@@ -256,24 +229,15 @@ export default function HomeScreen({ navigation, route }) {
                   </Text>
                 ) : null}
 
-                <View style={{ gap: 10, marginTop: 16 }}>
+                <View style={{ marginTop: 8 }}><CompactGrid>
+                  <ActionButton title="Open Chat" onPress={() => handleOpenConversations(bot)} />
+                  <ActionButton title="Edit" secondary onPress={() => handleEditAssistant(bot)} />
                   <ActionButton title="Knowledge Base" secondary onPress={() => navigation.navigate('Knowledge', { bot })} />
                   <ActionButton title={user?.plan === 'pro' ? 'Discord Setup' : 'Discord — Pro'} secondary onPress={() => user?.plan === 'pro' ? openLink(null, bot.id) : openLink('billing')} />
+                </CompactGrid></View>
                   <Text style={styles.botDescription}>Discord setup opens our website and requires browser sign-in.</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.chatButton}
-                  activeOpacity={0.8}
-                  onPress={() =>
-                    handleOpenConversations(bot)
-                  }
-                >
-                  <Text style={styles.chatButtonText}>
-                    Open Chat
-                  </Text>
-                </TouchableOpacity>
               </View>
-            ))}
+            ))}</CompactGrid>}
 
           <TouchableOpacity
             style={[
@@ -298,256 +262,35 @@ export default function HomeScreen({ navigation, route }) {
 }
 
 const makeStyles = (colors) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    padding: spacing.xl,
-  },
-
-  content: {
-    width: '100%',
-    maxWidth: 620,
-    alignSelf: 'center',
-  },
-
-  title: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-
-  profileCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.xxl,
-  },
-
-  profileLabel: {
-    color: colors.textMuted,
-    fontSize: 13,
-    marginBottom: 4,
-  },
-
-  profileValue: {
-    color: colors.text,
-    fontSize: 16,
-    marginBottom: spacing.md,
-  },
-
-  planText: {
-    color: colors.primary,
-    fontSize: 17,
-    fontWeight: '800',
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-
-  botCountText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    marginTop: 3,
-  },
-
-  createButton: {
-    backgroundColor: colors.button,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 11,
-  },
-
-  createButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-
-  loadingBots: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-  },
-
-  loadingText: {
-    color: colors.textMuted,
-    marginTop: spacing.md,
-  },
-
-  errorCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-  },
-
-  errorText: {
-    color: colors.error,
-    fontSize: 15,
-    marginBottom: spacing.md,
-  },
-
-  retryButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-
-  retryButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.xl,
-    alignItems: 'center',
-  },
-
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: spacing.sm,
-  },
-
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-
-  botCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-
-  botHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-  },
-
-  botName: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: '800',
-  },
-
-  editButton: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 7,
-  },
-
-  editButtonText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-
-  botDescription: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 21,
-    marginBottom: spacing.md,
-  },
-
-  botMetaText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'capitalize',
-    marginBottom: spacing.sm,
-  },
-
-  personalityText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-
-  chatButton: {
-    width: '100%',
-    backgroundColor: colors.button,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 13,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-  },
-
-  chatButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  signOutButton: {
-    width: '100%',
-    backgroundColor: colors.button,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: spacing.xxl,
-    marginBottom: spacing.xl,
-  },
-
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-
-  signOutButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  container: { flexGrow: 1, padding: spacing.md },
+  content: { width: '100%', maxWidth: 960, alignSelf: 'center' },
+  title: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  subtitle: { color: colors.textMuted, fontSize: 13 },
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
+  profileValue: { color: colors.textMuted, fontSize: 12 },
+  planText: { color: colors.primary, fontSize: 12, fontWeight: '800' },
+  sectionHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, marginBottom: spacing.sm },
+  sectionTitle: { color: colors.primary, fontSize: 22, fontWeight: '800' },
+  botCountText: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  createButton: { backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, paddingHorizontal: spacing.md, minHeight: 48, justifyContent: 'center' },
+  createButtonText: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  loadingBots: { alignItems: 'center', paddingVertical: spacing.lg },
+  loadingText: { color: colors.textMuted, marginTop: spacing.sm },
+  errorCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md },
+  errorText: { color: colors.error, fontSize: 15, marginBottom: spacing.sm },
+  retryButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  retryButtonText: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  emptyCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md, alignItems: 'center' },
+  emptyTitle: { color: colors.text, fontSize: 18, fontWeight: '800', marginBottom: spacing.sm },
+  emptyText: { color: colors.textMuted, fontSize: 15, textAlign: 'center' },
+  botCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md, gap: 4 },
+  botHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  botName: { flex: 1, color: colors.primary, fontSize: 18, fontWeight: '800' },
+  botDescription: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  botMetaText: { color: colors.primary, fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+  personalityText: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  signOutButton: { backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: spacing.md },
+  buttonDisabled: { opacity: 0.6 },
+  signOutButtonText: { color: colors.text, fontSize: 14, fontWeight: '800' },
 });

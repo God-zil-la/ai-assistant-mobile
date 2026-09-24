@@ -12,9 +12,9 @@ export default function ActionButton({ title, onPress, disabled, secondary, dest
   );
 }
 const makeStyles = (colors) => StyleSheet.create({
-  button: { minHeight: 48, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
+  button: { minHeight: 48, padding: spacing.sm, borderRadius: radius.sm, backgroundColor: colors.button, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },
   destructive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.error },
-  text: { fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  secondaryText: { color: colors.primary }, destructiveText: { color: colors.error }, dim: { opacity: 0.55 },
+  text: { fontSize: 14, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  secondaryText: { color: colors.text }, destructiveText: { color: colors.error }, dim: { opacity: 0.55 },
 });

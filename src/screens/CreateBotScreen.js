@@ -204,7 +204,7 @@ const makeStyles = (colors) => StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
-    padding: spacing.xl,
+    padding: spacing.md,
   },
 
   content: {
@@ -215,18 +215,18 @@ const makeStyles = (colors) => StyleSheet.create({
 
   title: {
     color: colors.text,
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: '800',
-    textAlign: 'center',
-    marginTop: spacing.lg,
+    textAlign: 'left',
+    marginTop: 0,
     marginBottom: spacing.sm,
   },
 
   subtitle: {
     color: colors.textMuted,
     fontSize: 15,
-    textAlign: 'center',
-    marginBottom: spacing.xxl,
+    textAlign: 'left',
+    marginBottom: spacing.md,
   },
 
   label: {
@@ -244,20 +244,20 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
+    paddingVertical: 10,
     fontSize: 16,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   multilineInput: {
-    minHeight: 110,
+    minHeight: 80,
   },
 
   help: {
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 21,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   categoryText: {
@@ -272,7 +272,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   errorText: {

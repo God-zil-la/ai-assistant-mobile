@@ -20,5 +20,5 @@ export default function Screen({ children, refreshControl }) {
 }
 const makeStyles = (colors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  content: { flexGrow: 1, padding: spacing.xl, width: '100%', maxWidth: 760, alignSelf: 'center', gap: spacing.lg },
+  content: { flexGrow: 1, padding: spacing.md, width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
 });

@@ -3,6 +3,7 @@ import { AppState, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
 import ActionButton from '../components/ActionButton';
+import CompactGrid from '../components/CompactGrid';
 import { getCurrentUser } from '../services/authService';
 import { getAuthToken, clearAuthSession } from '../services/tokenService';
 import { openAccountLink } from '../services/externalLinks';
@@ -47,19 +48,23 @@ export default function AccountScreen({ navigation, route }) {
       <Text style={styles.title}>Account & Help</Text>
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <View style={styles.card}>
-        <Text style={styles.label}>Username</Text><Text selectable style={styles.value}>{user?.username || '—'}</Text>
-        <Text style={styles.label}>Email</Text><Text selectable style={styles.value}>{user?.email || '—'}</Text>
-        <Text style={styles.label}>Current plan</Text><Text style={styles.plan}>{user?.plan?.toUpperCase() || 'Unavailable'}</Text>
+        <CompactGrid>
+          <View><Text style={styles.label}>Username</Text><Text selectable style={styles.value}>{user?.username || '—'}</Text></View>
+          <View><Text style={styles.label}>Current plan</Text><Text style={styles.plan}>{user?.plan?.toUpperCase() || 'Unavailable'}</Text></View>
+        </CompactGrid>
+        <View><Text style={styles.label}>Email</Text><Text selectable style={styles.value}>{user?.email || '—'}</Text></View>
         <Text style={styles.body}>Your account, assistants and conversations are shared with AI Assistant on the web.</Text>
         <ActionButton title={loading ? 'Refreshing…' : 'Refresh account'} secondary disabled={loading} onPress={refresh} />
       </View>
       <ActionButton title="Manage plan on website" secondary onPress={() => open('billing')} />
       <Text style={styles.body}>Plan management opens our secure website. Sign in there to continue.</Text>
-      <ActionButton title="Information Guide (PDF)" secondary onPress={() => open('guide')} />
+      <CompactGrid><ActionButton title="Information Guide (PDF)" secondary onPress={() => open('guide')} />
       <ActionButton title="Resend verification email" secondary onPress={() => open('verification')} />
+      </CompactGrid>
       <Text style={styles.heading}>Privacy & Support</Text>
-      <ActionButton title="Privacy policy" secondary onPress={() => open('privacy')} />
+      <CompactGrid><ActionButton title="Privacy policy" secondary onPress={() => open('privacy')} />
       <ActionButton title="Contact support" secondary onPress={() => open('support')} />
+      </CompactGrid>
       <Text selectable style={styles.body}>support@myaiassistantapp.se</Text>
       <ActionButton title="Reset password" secondary onPress={() => open('passwordReset')} />
       <Text style={styles.body}>Password recovery opens our secure website in your browser.</Text>
@@ -74,9 +79,9 @@ export default function AccountScreen({ navigation, route }) {
   );
 }
 const makeStyles = (colors) => StyleSheet.create({
-  title: { color: colors.text, fontSize: 28, fontWeight: '800' },
+  title: { color: colors.primary, fontSize: 22, fontWeight: '800' },
   heading: { color: colors.text, fontSize: 20, fontWeight: '700' },
-  card: { padding: spacing.lg, borderRadius: radius.md, backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1, gap: spacing.md },
+  card: { padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1, gap: spacing.sm },
   label: { color: colors.textMuted, fontSize: 13 }, value: { color: colors.text, fontSize: 17 },
   plan: { color: colors.primary, fontWeight: '800', fontSize: 18 },
   body: { color: colors.textMuted, lineHeight: 22 }, error: { color: colors.error, lineHeight: 22 },

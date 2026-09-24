@@ -98,9 +98,9 @@ export default function KnowledgeScreen({ route }) {
     } catch (err) { if (scope === generation.current) failure(err, 'Deletion'); }
     finally { if (scope === generation.current) { mutation.current = false; setOperation(null); } }
   }
-  const text = { color: colors.text, fontSize: 16, lineHeight: 25 };
+  const text = { color: colors.text, fontSize: 16, lineHeight: 22 };
   return <Screen refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { if (!busy) load(); }} tintColor={colors.primary} />}>
-    <Text style={{ color: colors.text, fontSize: 28, fontWeight: '800' }}>Knowledge for {bot?.name || 'Assistant'}</Text>
+    <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>Knowledge for {bot?.name || 'Assistant'}</Text>
     <Text style={text}>Add documents your assistant can use when answering your questions.</Text>
     <ActionButton title="What is Knowledge?" secondary onPress={() => setInfo(true)} />
     {loading ? <ActivityIndicator color={colors.primary} /> : null}
@@ -109,8 +109,8 @@ export default function KnowledgeScreen({ route }) {
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.success }}>{notice}</Text> : null}
     <Panel><Text style={{ ...text, fontSize: 22, fontWeight: '700' }}>Uploaded Knowledge</Text>
       {!loading && !files.length ? <Text style={text}>No uploaded knowledge yet.</Text> : null}
-      {files.map(item => <View key={item.id} style={{ gap: 10, borderBottomWidth: 1, borderColor: colors.border, paddingVertical: 12 }}>
-        <Text style={text}>{item.name}</Text>
+      {files.map(item => <View key={item.id} style={{ gap: 8, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: colors.border, paddingVertical: 8 }}>
+        <Text style={[text, { flex: 1, minWidth: 0 }]}>{item.name}</Text>
         <ActionButton title="Delete" accessibilityLabel={`Delete ${item.name}`} destructive disabled={busy || loading || recovery}
           onPress={() => { const scope = generation.current; confirmDelete('Delete knowledge', `Delete "${item.name}" from this assistant?`, () => remove(item, scope)); }} />
       </View>)}
