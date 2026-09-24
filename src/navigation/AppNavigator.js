@@ -16,6 +16,7 @@ import ChatScreen from '../screens/ChatScreen';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import CreateBotScreen from '../screens/CreateBotScreen';
 import EditBotScreen from '../screens/EditBotScreen';
+import WidgetSettingsScreen from '../screens/WidgetSettingsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -143,6 +144,14 @@ export default function AppNavigator() {
         />
 
         <Stack.Screen
+        name="WidgetSettings"
+        component={WidgetSettingsScreen}
+        options={{
+          title: 'Website Widget',
+        }}
+      />
+
+      <Stack.Screen
           name="Conversations"
           component={ConversationsScreen}
           options={{

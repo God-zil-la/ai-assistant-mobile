@@ -1,5 +1,4 @@
 import { useHeaderHeight } from '@react-navigation/elements';
-import WidgetSettings from '../components/WidgetSettings';
 import CategoryPicker from '../components/CategoryPicker';
 import AssistantPreferences from '../components/AssistantPreferences';
 import AssistantErrors from '../components/AssistantErrors';
@@ -12,7 +11,6 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,10 +19,7 @@ import {
   View,
 } from 'react-native';
 
-import {
-  deleteBot,
-  updateBot,
-} from '../services/botService';
+import { updateBot } from '../services/botService';
 import { getAuthToken } from '../services/tokenService';
 import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
 
@@ -48,7 +43,6 @@ export default function EditBotScreen({
   );
 
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [preferences, setPreferences] = useState(() => preferencesFor(bot));
@@ -100,70 +94,7 @@ export default function EditBotScreen({
     }
   }
 
-  async function performDelete() {
-    setError('');
-    setDeleting(true);
-
-    try {
-      const token = await getAuthToken();
-
-      if (!token) {
-        throw new Error('Your session has expired.');
-      }
-
-      await deleteBot(token, bot.id);
-
-      navigation.navigate('Home', {
-        refreshBots: Date.now(),
-      });
-    } catch (err) {
-      setError(
-        err.message || 'Unable to delete the assistant.',
-      );
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  function handleDelete() {
-    if (!bot?.id) {
-      setError('Unable to find this assistant.');
-      return;
-    }
-
-    if (
-      typeof window !== 'undefined' &&
-      typeof window.confirm === 'function'
-    ) {
-      const confirmed = window.confirm(
-        `Delete "${bot.name}"? This cannot be undone.`,
-      );
-
-      if (confirmed) {
-        performDelete();
-      }
-
-      return;
-    }
-
-    Alert.alert(
-      'Delete Assistant',
-      `Delete "${bot.name}"? This cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: performDelete,
-        },
-      ],
-    );
-  }
-
-  const busy = saving || deleting;
+  const busy = saving;
 
   if (!bot) {
     return (
@@ -199,7 +130,7 @@ export default function EditBotScreen({
           </Text>
 
           <Text style={styles.subtitle}>
-            Update your assistant or delete it.
+            Update your assistant settings.
           </Text>
 
           <Text style={styles.label}>
@@ -263,7 +194,6 @@ export default function EditBotScreen({
 <CategoryPicker value={category} onChange={setCategory} disabled={busy} />
           <AssistantPreferences values={preferences} onChange={setPreferences} disabled={busy} />
           <AssistantErrors errors={fieldErrors} />
-          <WidgetSettings key={bot.id} botId={bot.id} disabled={busy} />
 
           {error ? (
             <View style={styles.errorCard}>
@@ -286,22 +216,6 @@ export default function EditBotScreen({
               {saving
                 ? 'Saving...'
                 : 'Save Changes'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.deleteButton,
-              busy && styles.buttonDisabled,
-            ]}
-            activeOpacity={0.8}
-            onPress={handleDelete}
-            disabled={busy}
-          >
-            <Text style={styles.deleteButtonText}>
-              {deleting
-                ? 'Deleting...'
-                : 'Delete Assistant'}
             </Text>
           </TouchableOpacity>
 
@@ -430,21 +344,6 @@ const makeStyles = (colors) => StyleSheet.create({
     fontWeight: '800',
   },
 
-  deleteButton: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: colors.error,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-
-  deleteButtonText: {
-    color: colors.error,
-    fontSize: 16,
-    fontWeight: '800',
-  },
 
   cancelButton: {
     width: '100%',

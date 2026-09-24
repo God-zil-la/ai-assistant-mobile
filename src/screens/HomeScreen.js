@@ -19,12 +19,13 @@ import {
   View,
 } from 'react-native';
 
-import { getBots } from '../services/botService';
+import { deleteBot, getBots } from '../services/botService';
 import {
   clearAuthSession,
   getAuthToken,
 } from '../services/tokenService';
 import { useTheme, useThemedStyles, radius, spacing } from '../styles/theme';
+import { confirmDelete } from '../utils/confirm';
 
 export default function HomeScreen({ navigation, route }) {
   const { colors } = useTheme();
@@ -33,6 +34,7 @@ export default function HomeScreen({ navigation, route }) {
   const [bots, setBots] = useState([]);
   const [loadingBots, setLoadingBots] = useState(true);
   const [botsError, setBotsError] = useState('');
+  const [deletingBotId, setDeletingBotId] = useState(null);
 
   const [user, setUser] = useState(route.params?.user);
 
@@ -95,6 +97,58 @@ export default function HomeScreen({ navigation, route }) {
     navigation.navigate('Conversations', {
       bot,
     });
+  }
+
+  function handleWidget(bot) {
+    if (user?.plan === 'pro') {
+      navigation.navigate('WidgetSettings', {
+        bot,
+        plan: user.plan,
+      });
+      return;
+    }
+
+    openLink('billing');
+  }
+
+  async function performDeleteAssistant(bot) {
+    if (!bot?.id || deletingBotId !== null) return;
+
+    setDeletingBotId(bot.id);
+    setBotsError('');
+
+    try {
+      const token = await getAuthToken();
+
+      if (!token) {
+        throw new Error('Your session has expired.');
+      }
+
+      await deleteBot(token, bot.id);
+
+      setBots((items) =>
+        items.filter((item) => item.id !== bot.id),
+      );
+    } catch (err) {
+      setBotsError(
+        err.message || 'Unable to delete the assistant.',
+      );
+    } finally {
+      setDeletingBotId(null);
+    }
+  }
+
+  function handleDeleteAssistant(bot) {
+    if (!bot?.id) {
+      setBotsError('Unable to find this assistant.');
+      return;
+    }
+
+    confirmDelete(
+      'Delete Assistant',
+      `Delete "${bot.name}"? This cannot be undone.`,
+      () => performDeleteAssistant(bot),
+    );
   }
 
   async function openLink(key, botId) { try { if (botId) await openDiscordSetup(botId); else await openAccountLink(key); } catch (err) { setBotsError(err.message); } }
@@ -229,13 +283,72 @@ export default function HomeScreen({ navigation, route }) {
                   </Text>
                 ) : null}
 
-                <View style={{ marginTop: 8 }}><CompactGrid>
-                  <ActionButton title="Open Chat" onPress={() => handleOpenConversations(bot)} />
-                  <ActionButton title="Edit" secondary onPress={() => handleEditAssistant(bot)} />
-                  <ActionButton title="Knowledge Base" secondary onPress={() => navigation.navigate('Knowledge', { bot })} />
-                  <ActionButton title={user?.plan === 'pro' ? 'Discord Setup' : 'Discord — Pro'} secondary onPress={() => user?.plan === 'pro' ? openLink(null, bot.id) : openLink('billing')} />
-                </CompactGrid></View>
-                  <Text style={styles.botDescription}>Discord setup opens our website and requires browser sign-in.</Text>
+                <View style={{ marginTop: 8 }}>
+                  <CompactGrid>
+                    <ActionButton
+                      title={'\uD83D\uDCAC Chat'}
+                      disabled={deletingBotId === bot.id}
+                      onPress={() => handleOpenConversations(bot)}
+                    />
+
+                    <ActionButton
+                      title={'\u270F\uFE0F Edit Assistant'}
+                      secondary
+                      disabled={deletingBotId === bot.id}
+                      onPress={() => handleEditAssistant(bot)}
+                    />
+
+                    <ActionButton
+                      title={'\uD83D\uDCDA Knowledge Base'}
+                      secondary
+                      disabled={deletingBotId === bot.id}
+                      onPress={() =>
+                        navigation.navigate('Knowledge', { bot })
+                      }
+                    />
+
+                    <ActionButton
+                      title={
+                        user?.plan === 'pro'
+                          ? '\uD83C\uDFAE Discord Setup'
+                          : '\uD83D\uDD12 Discord - Pro'
+                      }
+                      secondary
+                      disabled={deletingBotId === bot.id}
+                      onPress={() =>
+                        user?.plan === 'pro'
+                          ? openLink(null, bot.id)
+                          : openLink('billing')
+                      }
+                    />
+
+                    <ActionButton
+                      title={
+                        user?.plan === 'pro'
+                          ? '\uD83C\uDF10 Website Widget'
+                          : '\uD83D\uDD12 Widget - Pro'
+                      }
+                      secondary
+                      disabled={deletingBotId === bot.id}
+                      onPress={() => handleWidget(bot)}
+                    />
+
+                    <ActionButton
+                      title={
+                        deletingBotId === bot.id
+                          ? 'Deleting...'
+                          : '\uD83D\uDDD1\uFE0F Delete'
+                      }
+                      destructive
+                      disabled={deletingBotId !== null}
+                      onPress={() => handleDeleteAssistant(bot)}
+                    />
+                  </CompactGrid>
+                </View>
+
+                <Text style={styles.botDescription}>
+                  Discord setup opens our website and requires browser sign-in.
+                </Text>
               </View>
             ))}</CompactGrid>}
 
