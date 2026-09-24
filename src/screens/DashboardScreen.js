@@ -29,7 +29,9 @@ export default function DashboardScreen({ navigation }) {
       <Panel><View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 }}>
         <Text style={{ color: colors.primary, fontSize: 18, fontWeight: '700' }}>Current Plan</Text>
         <Text style={{ color: colors.text, fontSize: 18 }}>{data.current_plan.toUpperCase()}</Text></View>
-        <Text style={{ color: colors.text, lineHeight: 20 }}>{data.bot_limit} AI assistants, {data.message_limit} AI messages per month, {data.knowledge_limit_display} Knowledge Base, and unlimited chats.</Text>
+        <Text style={{ color: colors.text, lineHeight: 20 }}>
+          {data.bot_limit} AI assistants, {data.message_limit} AI messages per month, {data.knowledge_limit_display} Knowledge Base, and unlimited chats{data.current_plan === 'pro' ? ', plus Website Widget / Public Chatbot.' : '.'}
+        </Text>
         <ActionButton title={data.current_plan === 'free' ? 'Upgrade Plan' : 'Manage Plan'} onPress={billing} />
         <Text style={{ color: colors.textMuted }}>Plan management opens the website. Sign in there to continue.</Text>
       </Panel>
@@ -39,6 +41,7 @@ export default function DashboardScreen({ navigation }) {
           ['AI Assistants', `${data.bot_count} / ${data.bot_limit}`],
           ['Knowledge Base', `${data.knowledge_used_display} / ${data.knowledge_limit_display}`],
           ['Chats', 'Unlimited'],
+          ['Website Widget', data.current_plan === 'pro' ? 'Available' : '?? Pro required'],
         ].map(([label, value]) => <Panel key={label}>
           <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '700' }}>{label}</Text>
           <Text style={{ color: colors.text }}>{value}</Text>
