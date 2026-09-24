@@ -114,6 +114,7 @@ export default function ChatScreen({ route, navigation }) {
   }, [load]);
 
   async function send() {
+    if (conversation?.is_widget) return;
     const text = message.trim();
 
     if (
@@ -467,7 +468,7 @@ export default function ChatScreen({ route, navigation }) {
                     ]}
                   >
                     {user
-                      ? 'You'
+                      ? (conversation?.is_widget ? 'Visitor' : 'You')
                       : conversation.bot_name ||
                         'Assistant'}
                   </Text>
@@ -493,6 +494,7 @@ export default function ChatScreen({ route, navigation }) {
             }}
           />
 
+          {conversation?.is_widget ? <Text style={styles.muted}>Visitor chat — read-only. Messages are from a website visitor.</Text> : null}
           <View style={styles.composer}>
             <TextInput
               value={message}
@@ -508,7 +510,7 @@ export default function ChatScreen({ route, navigation }) {
             <ActionButton
               title={busy ? 'Waiting…' : 'Send'}
               onPress={send}
-              disabled={blocked || !message.trim()}
+              disabled={blocked || conversation?.is_widget || !message.trim()}
             />
 
             <Text style={styles.disclaimer}>

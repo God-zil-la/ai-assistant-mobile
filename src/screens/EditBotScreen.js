@@ -1,4 +1,5 @@
 import { useHeaderHeight } from '@react-navigation/elements';
+import WidgetSettings from '../components/WidgetSettings';
 import CategoryPicker from '../components/CategoryPicker';
 import AssistantPreferences from '../components/AssistantPreferences';
 import AssistantErrors from '../components/AssistantErrors';
@@ -262,6 +263,7 @@ export default function EditBotScreen({
 <CategoryPicker value={category} onChange={setCategory} disabled={busy} />
           <AssistantPreferences values={preferences} onChange={setPreferences} disabled={busy} />
           <AssistantErrors errors={fieldErrors} />
+          <WidgetSettings key={bot.id} botId={bot.id} disabled={busy} />
 
           {error ? (
             <View style={styles.errorCard}>

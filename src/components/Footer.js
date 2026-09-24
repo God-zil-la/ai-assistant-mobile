@@ -9,6 +9,7 @@ export default function Footer() {
   const [error, setError] = useState('');
   async function open(key) { try { await openAccountLink(key); setError(''); } catch (err) { setError(err.message); } }
   return <View style={{ marginTop: 12, paddingTop: 12, gap: 8, borderTopWidth: 1, borderColor: colors.primary }}>
+    <ActionButton title="www.myaiassistantapp.se" secondary onPress={() => open('website')} />
     <CompactGrid>
     <ActionButton title="Contact support" secondary onPress={() => open('support')} />
     <ActionButton title="Privacy Policy" secondary onPress={() => open('privacy')} />

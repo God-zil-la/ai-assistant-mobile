@@ -2,6 +2,7 @@ import { Linking } from 'react-native';
 import { API_BASE_URL } from '../config/api';
 
 export const accountLinks = {
+  website: 'https://www.myaiassistantapp.se',
   billing: `${API_BASE_URL}/payments/`,
   plans: `${API_BASE_URL}/#pricing`,
   guide: `${API_BASE_URL}/static/pdf/ai_assistant_setup_guide_v2.pdf`,
