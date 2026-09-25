@@ -44,7 +44,8 @@
         {
           "enforceContrast": false
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {
