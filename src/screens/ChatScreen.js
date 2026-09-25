@@ -9,6 +9,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   TextInput,
   View,
 } from 'react-native';
@@ -35,6 +36,8 @@ import {
 export default function ChatScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
 
   const bot = route.params?.bot;
   const conversationId = route.params?.conversationId;
@@ -321,7 +324,7 @@ export default function ChatScreen({ route, navigation }) {
 
                 {showLanguageHint ? (
                   <Text style={styles.muted}>
-                    🌍 You can chat in many languages — just
+                    Ã°Å¸Å’Â You can chat in many languages Ã¢â‚¬â€ just
                     write in the language you prefer.
                   </Text>
                 ) : null}
@@ -445,7 +448,7 @@ export default function ChatScreen({ route, navigation }) {
                   style={styles.muted}
                   accessibilityLiveRegion="polite"
                 >
-                  Waiting for your assistant…
+                  Waiting for your assistantÃ¢â‚¬Â¦
                 </Text>
               ) : null
             }
@@ -494,21 +497,25 @@ export default function ChatScreen({ route, navigation }) {
             }}
           />
 
-          {conversation?.is_widget ? <Text style={styles.muted}>Visitor chat — read-only. Messages are from a website visitor.</Text> : null}
-          <View style={styles.composer}>
+          {conversation?.is_widget ? <Text style={styles.muted}>Visitor chat Ã¢â‚¬â€ read-only. Messages are from a website visitor.</Text> : null}
+          <View style={[styles.composer, isLandscape && styles.composerLandscape]}>
             <TextInput
               value={message}
               onChangeText={setMessage}
               multiline
-              style={[styles.input, styles.draft]}
-              placeholder="Message your assistant…"
+              style={[
+                styles.input,
+                styles.draft,
+                isLandscape && styles.draftLandscape,
+              ]}
+              placeholder="Message your assistantÃ¢â‚¬Â¦"
               placeholderTextColor={colors.textMuted}
               editable={!busy}
               accessibilityLabel="Message your assistant"
             />
 
             <ActionButton
-              title={busy ? 'Waiting…' : 'Send'}
+              title={busy ? 'WaitingÃ¢â‚¬Â¦' : 'Send'}
               onPress={send}
               disabled={blocked || conversation?.is_widget || !message.trim()}
             />
@@ -534,8 +541,6 @@ const makeStyles = (colors) =>
     container: {
       flex: 1,
       width: '100%',
-      maxWidth: 800,
-      alignSelf: 'center',
     },
 
     header: {
@@ -643,6 +648,17 @@ const makeStyles = (colors) =>
     draft: {
       minHeight: 48,
       maxHeight: 120,
+    },
+
+    composerLandscape: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      gap: spacing.xs,
+    },
+
+    draftLandscape: {
+      minHeight: 40,
+      maxHeight: 72,
     },
 
     disclaimer: {
