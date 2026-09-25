@@ -293,10 +293,7 @@ export default function ChatScreen({ route, navigation }) {
             data={conversation?.messages || []}
             keyExtractor={(item) => String(item.id)}
             style={styles.messages}
-            contentContainerStyle={[
-              styles.messageContent,
-              isLandscape && styles.messageContentLandscape,
-            ]}
+            contentContainerStyle={styles.messageContent}
             keyboardShouldPersistTaps="handled"
             onContentSizeChange={scrollToActiveContent}
             onLayout={scrollToActiveContent}
@@ -502,48 +499,30 @@ export default function ChatScreen({ route, navigation }) {
 
           {conversation?.is_widget ? <Text style={styles.muted}>Visitor chat - read-only. Messages are from a website visitor.</Text> : null}
           <View style={[styles.composer, isLandscape && styles.composerLandscape]}>
-            <View
+            <TextInput
+              value={message}
+              onChangeText={setMessage}
+              multiline
               style={[
-                styles.composerControls,
-                isLandscape && styles.composerControlsLandscape,
+                styles.input,
+                styles.draft,
+                isLandscape && styles.draftLandscape,
               ]}
-            >
-              <TextInput
-                value={message}
-                onChangeText={setMessage}
-                multiline
-                style={[
-                  styles.input,
-                  styles.draft,
-                  isLandscape && styles.draftLandscape,
-                ]}
-                placeholder="Message your assistant..."
-                placeholderTextColor={colors.textMuted}
-                editable={!busy}
-                accessibilityLabel="Message your assistant"
-              />
+              placeholder="Message your assistant..."
+              placeholderTextColor={colors.textMuted}
+              editable={!busy}
+              accessibilityLabel="Message your assistant"
+            />
 
-              <View
-                style={[
-                  styles.sendWrapper,
-                  isLandscape && styles.sendWrapperLandscape,
-                ]}
-              >
-                <ActionButton
-                  title={busy ? 'Waiting...' : 'Send'}
-                  onPress={send}
-                  disabled={blocked || conversation?.is_widget || !message.trim()}
-                />
-              </View>
-            </View>
+            <ActionButton
+              title={busy ? 'Waiting...' : 'Send'}
+              onPress={send}
+              disabled={blocked || conversation?.is_widget || !message.trim()}
+            />
 
-            <Text
-              style={[
-                styles.disclaimer,
-                isLandscape && styles.disclaimerLandscape,
-              ]}
-            >
-              AI can make mistakes. Check important information.
+            <Text style={styles.disclaimer}>
+              AI can make mistakes. Check important
+              information.
             </Text>
           </View>
         </View>
@@ -617,13 +596,6 @@ const makeStyles = (colors) =>
       gap: spacing.md,
     },
 
-    messageContentLandscape: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      gap: spacing.sm,
-    },
-
     bubble: {
       maxWidth: '92%',
       borderRadius: radius.md,
@@ -673,51 +645,25 @@ const makeStyles = (colors) =>
       gap: spacing.sm,
     },
 
-    composerControls: {
-      gap: spacing.sm,
-    },
-
-    composerControlsLandscape: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: spacing.sm,
-    },
-
     draft: {
       minHeight: 48,
       maxHeight: 120,
     },
 
     composerLandscape: {
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      gap: 4,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      gap: spacing.xs,
     },
 
     draftLandscape: {
-      flex: 1,
-      minHeight: 48,
-      maxHeight: 64,
-      paddingVertical: spacing.sm,
-    },
-
-    sendWrapper: {
-      width: '100%',
-    },
-
-    sendWrapperLandscape: {
-      width: 120,
-      flexShrink: 0,
+      minHeight: 40,
+      maxHeight: 72,
     },
 
     disclaimer: {
       color: colors.textMuted,
       fontSize: 12,
       textAlign: 'center',
-    },
-
-    disclaimerLandscape: {
-      fontSize: 10,
-      lineHeight: 13,
     },
   });

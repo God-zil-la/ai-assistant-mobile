@@ -284,7 +284,7 @@ export default function HomeScreen({ navigation, route }) {
                 ) : null}
 
                 <View style={{ marginTop: 8 }}>
-                  <CompactGrid>
+                  <CompactGrid columns={1} tabletColumns={2}>
                     <ActionButton
                       title={'\uD83D\uDCAC Chat'}
                       disabled={deletingBotId === bot.id}
