@@ -8,7 +8,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.mrhusse.aiassistant"
+      "bundleIdentifier": "com.mrhusse.aiassistant",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.mrhusse.aiassistant",
