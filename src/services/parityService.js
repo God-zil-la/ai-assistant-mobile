@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { File } from 'expo-file-system';
 import { API_BASE_URL } from '../config/api';
 import { request } from './apiClient';
 import { getAuthToken } from './tokenService';
@@ -14,6 +15,11 @@ export const getKnowledge = (botId) => authenticated(knowledgePath(botId), { exp
 export const deleteKnowledge = (botId, id) => authenticated(`${knowledgePath(botId)}${encodeURIComponent(id)}/`, { method: 'DELETE', expectedStatus: 204 });
 export function uploadKnowledge(botId, asset) {
   const body = new FormData();
-  body.append('file', Platform.OS === 'web' ? asset.file : { uri: asset.uri, name: asset.name, type: asset.mimeType || 'application/octet-stream' });
+  if (Platform.OS === 'web') {
+    body.append('file', asset.file);
+  } else {
+    const file = new File(asset.uri);
+    body.append('file', file, asset.name);
+  }
   return authenticated(knowledgePath(botId), { method: 'POST', body, multipart: true, timeout: 180000, expectedStatus: 201 });
 }
