@@ -1,4 +1,5 @@
 import MessageText from '../components/MessageText';
+import ReportResponseButton from '../components/ReportResponseButton';
 import { assistantIcon } from '../config/assistantPreferences';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -495,6 +496,9 @@ export default function ChatScreen({ route, navigation }) {
                   >
                     {formatDate(item.timestamp)}
                   </Text>
+                  {Platform.OS === 'android' && item.sender === 'assistant' ? (
+                    <ReportResponseButton conversationId={conversationId} messageId={item.id} />
+                  ) : null}
                 </View>
               );
             }}
