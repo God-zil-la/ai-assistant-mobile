@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Panel from '../components/Panel';
 import Footer from '../components/Footer';
 import ThemeControl from '../components/ThemeControl';
 import ActionButton from '../components/ActionButton';
-import { openAccountLink } from '../services/externalLinks';
 import { useTheme } from '../styles/theme';
 export default function WelcomeScreen({ navigation }) {
   const { colors } = useTheme();
-  const [error, setError] = useState('');
   return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
     <ScrollView contentContainerStyle={{ padding: 24, gap: 24, width: '100%', maxWidth: 800, alignSelf: 'center' }}>
       <ThemeControl />
@@ -25,8 +22,7 @@ export default function WelcomeScreen({ navigation }) {
         ['Keep unlimited conversations', 'Start separate conversations and return to your chat history whenever you need it.'],
         ['Understand your AI usage', 'View usage and conversation analytics to understand how your assistants are being used.'],
       ].map(([title, description]) => <Panel key={title}><Text style={{ color: colors.primary, fontSize: 20, fontWeight: '700' }}>{title}</Text><Text style={{ color: colors.text, lineHeight: 24 }}>{description}</Text></Panel>)}
-      <ActionButton title="Plans & Pricing" secondary onPress={async () => { try { await openAccountLink('plans'); } catch (err) { setError(err.message); } }} />
-      {error ? <Text accessibilityRole="alert" style={{ color: colors.error }}>{error}</Text> : null}
+      <ActionButton title="Plans & Pricing" secondary onPress={() => navigation.navigate('Plans')} />
       <Footer />
     </ScrollView>
   </SafeAreaView>;

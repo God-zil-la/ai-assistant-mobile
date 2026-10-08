@@ -1,3 +1,5 @@
+import PlansScreen from '../screens/PlansScreen';
+import StorePurchaseObserver from '../components/StorePurchaseObserver';
 import DashboardScreen from '../screens/DashboardScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import KnowledgeScreen from '../screens/KnowledgeScreen';
@@ -90,6 +92,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer ref={navigationRef} theme={{ ...navigationTheme, colors: { ...navigationTheme.colors, primary: colors.primary, background: colors.background, card: colors.surface, text: colors.text, border: colors.surfaceBorder } }}>
+      <StorePurchaseObserver />
       <Stack.Navigator
         initialRouteName={initialRoute}
         screenOptions={{
@@ -104,6 +107,7 @@ export default function AppNavigator() {
           },
         }}
       >
+        <Stack.Screen name="Plans" component={PlansScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="Analytics" component={AnalyticsScreen} />
         <Stack.Screen name="Knowledge" component={KnowledgeScreen} />

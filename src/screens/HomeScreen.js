@@ -108,7 +108,7 @@ export default function HomeScreen({ navigation, route }) {
       return;
     }
 
-    openLink('billing');
+    navigation.navigate('Plans');
   }
 
   async function performDeleteAssistant(bot) {
@@ -318,7 +318,7 @@ export default function HomeScreen({ navigation, route }) {
                       onPress={() =>
                         user?.plan === 'pro'
                           ? openLink(null, bot.id)
-                          : openLink('billing')
+                          : navigation.navigate('Plans')
                       }
                     />
 

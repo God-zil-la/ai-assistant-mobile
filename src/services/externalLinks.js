@@ -1,12 +1,17 @@
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { API_BASE_URL } from '../config/api';
 
+export const canOpenPurchaseLinks = Platform.OS === 'web';
+
 export const accountLinks = {
+  appleSubscriptions: 'https://apps.apple.com/account/subscriptions',
+  googleSubscriptions: 'https://play.google.com/store/account/subscriptions?package=com.mrhusse.aiassistant',
   website: 'https://www.myaiassistantapp.se',
   billing: `${API_BASE_URL}/payments/`,
   plans: `${API_BASE_URL}/#pricing`,
   guide: `${API_BASE_URL}/static/pdf/ai_assistant_setup_guide_v2.pdf`,
   deleteInformation: `${API_BASE_URL}/delete-account/`,
+  terms: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
   privacy: `${API_BASE_URL}/privacy/`,
   passwordReset: `${API_BASE_URL}/accounts/password-reset/`,
   verification: `${API_BASE_URL}/accounts/resend-verification/`,
@@ -15,6 +20,9 @@ export const accountLinks = {
 };
 
 export async function openAccountLink(key) {
+  if (!canOpenPurchaseLinks && ['billing', 'plans', 'website'].includes(key)) {
+    throw new Error('Use Plans in the app to manage store purchases. Contact support for website billing help.');
+  }
   try {
     await Linking.openURL(accountLinks[key]);
   } catch {

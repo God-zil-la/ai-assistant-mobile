@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  'https://www.myaiassistantapp.se';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.myaiassistantapp.se';
 
 export const API_ENDPOINTS = {
   login: `${API_BASE_URL}/accounts/api/login/`,

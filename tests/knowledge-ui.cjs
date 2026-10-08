@@ -96,7 +96,7 @@ const footer = names => 'Useful answer.\n\n**Källor i sökunderlaget**\n' + nam
     const refresh = () => page.getByRole('button', { name: 'Refresh file list', exact: true });
     async function open() {
       await page.goto(origin);
-      if (!web) await page.getByRole('button', { name: 'Knowledge Base', exact: true }).first().click();
+      if (!web) await page.getByRole('button', { name: /Knowledge Base$/ }).first().click();
       await page.getByText('Knowledge list updated.', { exact: false }).waitFor();
     }
     async function pick() {
@@ -166,7 +166,7 @@ const footer = names => 'Useful answer.\n\n**Källor i sökunderlaget**\n' + nam
       await page.evaluate(() => { window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true })); window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); });
       await check('Knowledge list updated.');
     }
-    else { await page.getByLabel(/back/i).first().click(); await page.getByRole('button', { name: 'Knowledge Base', exact: true }).last().click(); await check('Knowledge for Second assistant'); await check('Knowledge list updated.'); }
+    else { await page.getByLabel(/back/i).first().click(); await page.getByRole('button', { name: /Knowledge Base$/ }).last().click(); await check('Knowledge for Second assistant'); await check('Knowledge list updated.'); }
     release(); await page.waitForTimeout(100); assert.equal(await page.getByText('Late.txt', { exact: true }).count(), 0); passed++;
     // Actual chat and reopened history use the same server-supplied source footer.
     for (const names of [[special], [special, 'Other &amp; _file_.pdf'], []]) {
@@ -190,7 +190,7 @@ const footer = names => 'Useful answer.\n\n**Källor i sökunderlaget**\n' + nam
     }
     if (!web) {
       await page.goto(origin); await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
-      await page.getByRole('button', { name: 'Knowledge Base', exact: true }).first().click(); await check('Knowledge list updated.');
+      await page.getByRole('button', { name: /Knowledge Base$/ }).first().click(); await check('Knowledge list updated.');
       await page.screenshot({ path: path.join(temp, 'knowledge-dark.png'), fullPage: true });
       await pick(); mode = { status: 401, data: { detail: 'Invalid token' } }; await upload().click(); await check('Welcome Back');
       assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), null);

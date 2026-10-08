@@ -1,7 +1,16 @@
 {
-  "cli": { "appVersionSource": "local" },
+  "cli": {
+    "appVersionSource": "local"
+  },
   "build": {
-    "preview": { "distribution": "internal" },
-    "production": { "autoIncrement": false }
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": false,
+      "env": {
+        "ORG_GRADLE_PROJECT_openiapStore": "play"
+      }
+    }
   }
 }

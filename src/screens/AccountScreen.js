@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { AppState, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../components/Screen';
+import AIConsentControl from '../components/AIConsentControl';
 import ActionButton from '../components/ActionButton';
 import CompactGrid from '../components/CompactGrid';
 import { getCurrentUser } from '../services/authService';
@@ -56,12 +57,13 @@ export default function AccountScreen({ navigation, route }) {
         <Text style={styles.body}>Your account, assistants and conversations are shared with AI Assistant on the web.</Text>
         <ActionButton title={loading ? 'Refreshing…' : 'Refresh account'} secondary disabled={loading} onPress={refresh} />
       </View>
-      <ActionButton title="Manage plan on website" secondary onPress={() => open('billing')} />
-      <Text style={styles.body}>Plan management opens our secure website. Sign in there to continue.</Text>
+      <ActionButton title="Upgrade / Manage Plan" secondary onPress={() => navigation.navigate('Plans')} />
+      <Text style={styles.body}>Choose a plan, restore purchases or manage your current subscription.</Text>
       <CompactGrid><ActionButton title="Information Guide (PDF)" secondary onPress={() => open('guide')} />
       <ActionButton title="Resend verification email" secondary onPress={() => open('verification')} />
       </CompactGrid>
       <Text style={styles.heading}>Privacy & Support</Text>
+      <AIConsentControl />
       <CompactGrid><ActionButton title="Privacy policy" secondary onPress={() => open('privacy')} />
       <ActionButton title="Contact support" secondary onPress={() => open('support')} />
       </CompactGrid>

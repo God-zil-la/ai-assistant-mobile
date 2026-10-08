@@ -6,7 +6,6 @@ import Panel from '../components/Panel';
 import CompactGrid from '../components/CompactGrid';
 import ActionButton from '../components/ActionButton';
 import { getDashboard } from '../services/parityService';
-import { openAccountLink } from '../services/externalLinks';
 import { useTheme } from '../styles/theme';
 export default function DashboardScreen({ navigation }) {
   const { colors } = useTheme();
@@ -19,7 +18,7 @@ export default function DashboardScreen({ navigation }) {
     finally { setLoading(false); }
   }, []);
   useFocusEffect(useCallback(() => { load(); }, [load]));
-  async function billing() { try { await openAccountLink('billing'); } catch (err) { setError(err.message); } }
+  function billing() { navigation.navigate('Plans'); }
   return <Screen refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.primary} />}>
     <Text style={{ color: colors.primary, fontSize: 22, fontWeight: '800' }}>Dashboard</Text>
     <Text style={{ color: colors.text, lineHeight: 24 }}>Manage your AI assistants, usage, knowledge, and subscription.</Text>
@@ -33,7 +32,7 @@ export default function DashboardScreen({ navigation }) {
           {data.bot_limit} AI assistants, {data.message_limit} AI messages per month, {data.knowledge_limit_display} Knowledge Base, and unlimited chats{data.current_plan === 'pro' ? ', plus Website Widget / Public Chatbot.' : '.'}
         </Text>
         <ActionButton title={data.current_plan === 'free' ? 'Upgrade Plan' : 'Manage Plan'} onPress={billing} />
-        <Text style={{ color: colors.textMuted }}>Plan management opens the website. Sign in there to continue.</Text>
+        <Text style={{ color: colors.textMuted }}>Choose a plan, restore purchases or manage your current subscription.</Text>
       </Panel>
       <CompactGrid tabletColumns={4}>
         {[

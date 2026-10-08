@@ -1,5 +1,6 @@
 import { getBotChatEndpoint, getConversationEndpoint } from '../config/api.js';
 import { ApiError, request } from './apiClient.js';
+import { requireAIConsent } from './aiConsent';
 
 export async function reportAssistantResponse(token, conversationId, messageId) {
   const data = await request(
@@ -11,7 +12,8 @@ export async function reportAssistantResponse(token, conversationId, messageId) 
   }
   return data;
 }
-export function sendChatMessage(token, botId, message, conversationId) {
+export async function sendChatMessage(token, botId, message, conversationId) {
+  await requireAIConsent(token);
   return request(getBotChatEndpoint(botId), {
     token, method: 'POST', timeout: 90000,
     body: { message, ...(conversationId ? { conversation_id: conversationId } : {}) },

@@ -123,7 +123,7 @@ if (process.argv.includes('--knowledge')) {
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(origin);
-    await page.getByRole('button', { name: 'Knowledge Base', exact: true }).click();
+    await page.getByRole('button', { name: /Knowledge Base$/ }).click();
     await page.getByText('Existing.txt', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'What is Knowledge?', exact: true }).click();
     await page.getByText('Simple example', { exact: true }).waitFor();
@@ -154,7 +154,7 @@ if (process.argv.includes('--knowledge')) {
     await page.getByText('Knowledge storage limit reached for your premium plan.', { exact: false }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), 'mock-token');
     await page.goto(origin);
-    await page.getByText('Edit', { exact: true }).click();
+    await page.getByRole('button', { name: /Edit Assistant$/ }).click();
     await page.getByText('Describe what your assistant helps with', { exact: false }).waitFor();
     await page.getByText('Describe its tone, response style', { exact: false }).waitFor();
     assert.equal(await page.getByRole('textbox', { name: 'Description', exact: true }).inputValue(), bot.description);
@@ -192,7 +192,7 @@ if (process.argv.includes('--knowledge')) {
     await page.getByText('Conversation renamed.').waitFor();
     assert.equal(conversation.title, 'Autumn trip');
     await page.screenshot({ path: path.join(__dirname, '../.expo/chat-preview.png') });
-    const languageHint = page.getByText('🌍 You can chat in many languages — just write in the language you prefer.', { exact: true });
+    const languageHint = page.getByText(/You can chat in many languages\s*-\s*just\s*write in the language you prefer\./);
     assert.equal(await languageHint.count(), 0); // edd9163: hide in existing history.
     const reopenChat = async () => {
       await page.goto(origin);

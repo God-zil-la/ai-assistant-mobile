@@ -3,9 +3,11 @@ import { File } from 'expo-file-system';
 import { API_BASE_URL } from '../config/api';
 import { request } from './apiClient';
 import { getAuthToken } from './tokenService';
+import { requireAIConsent } from './aiConsent';
 async function authenticated(path, options) {
   const token = await getAuthToken();
   if (!token) throw new Error('Your session has expired. Please sign in again.');
+  if (options?.method === 'POST' && path.endsWith('/knowledge/')) await requireAIConsent(token);
   return request(`${API_BASE_URL}/bots/api/${path}`, { ...options, token });
 }
 export const getDashboard = () => authenticated('dashboard/');

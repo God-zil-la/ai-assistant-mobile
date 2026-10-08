@@ -4,10 +4,9 @@ import { Text, View } from 'react-native';
 import ActionButton from '../components/ActionButton';
 import Screen from '../components/Screen';
 import WidgetSettings from '../components/WidgetSettings';
-import { openAccountLink } from '../services/externalLinks';
 import { useTheme } from '../styles/theme';
 
-export default function WidgetSettingsScreen({ route }) {
+export default function WidgetSettingsScreen({ route, navigation }) {
   const { colors } = useTheme();
   const bot = route.params?.bot;
   const plan = route.params?.plan;
@@ -17,7 +16,7 @@ export default function WidgetSettingsScreen({ route }) {
     setError('');
 
     try {
-      await openAccountLink('billing');
+      navigation.navigate('Plans');
     } catch (err) {
       setError(err.message || 'Unable to open billing.');
     }

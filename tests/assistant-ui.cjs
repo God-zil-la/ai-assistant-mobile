@@ -74,7 +74,7 @@ const server = http.createServer((req, res) => {
     assert.equal(creates, 1);
     assert.deepEqual(bot, { id: 9, name: 'U1 guide', description: 'Family travel', personality: 'Ask about the budget first.', category: 'general', response_tone: 'professional', response_length: 'detailed', avatar_icon: 'book' });
     await page.getByText('📚 U1 guide', { exact: true }).waitFor();
-    await page.getByText('Edit', { exact: true }).click();
+    await page.getByRole('button', { name: /Edit Assistant$/ }).click();
     assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), bot.personality);
     for (const text of ['Professional', 'Detailed', '📚 Books']) await page.getByText(text, { exact: true }).waitFor();
     for (const width of [320, 390, 1280]) {
@@ -112,14 +112,14 @@ const server = http.createServer((req, res) => {
     assert.equal(bot.response_tone, 'default');
     assert.equal(bot.response_length, 'default');
     assert.equal(bot.avatar_icon, 'default');
-    await page.getByText('Edit', { exact: true }).click();
+    await page.getByRole('button', { name: /Edit Assistant$/ }).click();
     await page.getByRole('button', { name: 'Choose response tone', exact: true }).click();
     await page.getByRole('button', { name: 'Friendly', exact: true }).click();
     await page.locator('[aria-modal="true"]').waitFor({ state: 'hidden' });
     await page.getByText('Cancel', { exact: true }).click();
     await page.getByText('Signed in as U1 tester').waitFor();
     assert.equal(updates, 2);
-    await page.getByText('Edit', { exact: true }).click();
+    await page.getByRole('button', { name: /Edit Assistant$/ }).click();
     assert.equal(await page.getByRole('button', { name: 'Choose response tone', exact: true }).innerText(), 'Use personality & instructions');
     assert.deepEqual(pageErrors, []);
     console.log('PASS U1: create, required-field errors, preference/icon save and reload, duplicate API field error with retained input, reset to defaults, clear description, cancel, 320/390/1280 widths, light/dark; no page errors.');
