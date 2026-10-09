@@ -1,6 +1,17 @@
 // Keep keys/defaults aligned with bots/customization.py; older API data is neutral.
-export const defaultPreferences = { response_tone: 'default', response_length: 'default', avatar_icon: 'default' };
+export const defaultPreferences = { response_tone: 'default', response_length: 'default', avatar_icon: 'default', knowledge_activation_mode: 'automatic' };
 export const preferenceFields = [
+  {
+    key: 'knowledge_activation_mode',
+    label: 'Knowledge Base activation',
+    help: 'Choose when your assistant searches its uploaded knowledge documents.',
+    options: [
+      { value: 'automatic', label: 'Automatic' },
+      { value: 'on_request', label: 'On Request' },
+      { value: 'always', label: 'Always' },
+    ],
+  },
+
   { key: 'response_tone', label: 'Response tone', help: 'Choose a default tone. More specific personality instructions or chat requests take priority.', options: [
     { value: 'default', label: 'Use personality & instructions' },
     { value: 'friendly', label: 'Friendly' }, { value: 'professional', label: 'Professional' },
