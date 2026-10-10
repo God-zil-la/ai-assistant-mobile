@@ -117,6 +117,16 @@ export default function ChatScreen({ route, navigation }) {
     };
   }, [load]);
 
+  const messageCount = conversation?.messages?.length ?? 0;
+
+  useEffect(() => {
+    if (!messageCount || editing || error) return;
+    const frame = requestAnimationFrame(() => {
+      list.current?.scrollToEnd({ animated: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [messageCount, editing, error]);
+
   async function send() {
     if (conversation?.is_widget) return;
     const text = message.trim();

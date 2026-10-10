@@ -10,6 +10,9 @@ import {
   preferencesFor,
   assistantIcon,
   preferenceFields,
+  advancedPreferenceKeys,
+  hasAdvancedCustomization,
+  preferencesForPlan,
 } from '../src/config/assistantPreferences.js';
 
 const valid = {
@@ -181,5 +184,46 @@ test('U4.1 backend field errors retain their identities', () => {
       default_language: 'Unsupported language.',
       custom_instructions: 'Invalid instructions.',
     },
+  );
+});
+
+
+test('U4.2 Free excludes advanced customization from API payloads', () => {
+  const preferences = {
+    ...defaultPreferences,
+    communication_style: 'formal',
+    custom_instructions: 'Keep this saved.',
+  };
+
+  const filtered = preferencesForPlan(preferences, 'free');
+
+  for (const key of advancedPreferenceKeys) {
+    assert.equal(Object.hasOwn(filtered, key), false, key);
+  }
+
+  assert.equal(filtered.response_tone, preferences.response_tone);
+  assert.equal(filtered.knowledge_activation_mode, preferences.knowledge_activation_mode);
+  assert.equal(hasAdvancedCustomization('free'), false);
+});
+
+test('U4.2 Premium and Pro retain advanced customization', () => {
+  for (const plan of ['premium', 'pro']) {
+    assert.equal(hasAdvancedCustomization(plan), true);
+    assert.deepEqual(preferencesForPlan(defaultPreferences, plan), defaultPreferences);
+  }
+});
+
+test('U4.2 Free filtering preserves original saved preferences', () => {
+  const preferences = {
+    ...defaultPreferences,
+    custom_instructions: 'Restore after upgrade.',
+  };
+
+  preferencesForPlan(preferences, 'free');
+
+  assert.equal(preferences.custom_instructions, 'Restore after upgrade.');
+  assert.equal(
+    preferencesForPlan(preferences, 'pro').custom_instructions,
+    'Restore after upgrade.',
   );
 });

@@ -2,11 +2,13 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import CategoryPicker from '../components/CategoryPicker';
 import AssistantPreferences from '../components/AssistantPreferences';
 import AssistantErrors from '../components/AssistantErrors';
-import { defaultPreferences } from '../config/assistantPreferences';
+import { defaultPreferences, preferencesForPlan } from '../config/assistantPreferences';
 import { validateAssistant, assistantApiErrors } from '../utils/assistantValidation';
 import { descriptionHelp, personalityHelp } from '../config/assistantHelp';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { storeBilling } from '../services/storeBilling';
 
 import {
   KeyboardAvoidingView,
@@ -37,11 +39,26 @@ export default function CreateBotScreen({ navigation }) {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [preferences, setPreferences] = useState(defaultPreferences);
+  const [plan, setPlan] = useState('free');
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      storeBilling.refresh()
+        .then(status => {
+          if (active) setPlan(status?.effective_plan || 'free');
+        })
+        .catch(() => {
+          if (active) setPlan('free');
+        });
+      return () => { active = false; };
+    }, []),
+  );
 
   async function handleCreate() {
     setError('');
 
-    const errors = validateAssistant({ name, description, personality, category, ...preferences });
+    const errors = validateAssistant({ name, description, personality, category, ...preferencesForPlan(preferences, plan) });
     setFieldErrors(errors);
     if (Object.keys(errors).length) {
       return;
@@ -56,12 +73,14 @@ export default function CreateBotScreen({ navigation }) {
         throw new Error('Your session has expired.');
       }
 
+      const currentStatus = await storeBilling.refresh();
+      const currentPlan = currentStatus?.effective_plan || 'free';
       await createBot(token, {
         name: name.trim(),
         description: description.trim(),
         personality: personality.trim(),
         category,
-        ...preferences,
+        ...preferencesForPlan(preferences, currentPlan),
       });
 
       navigation.popTo('Home', {
@@ -151,7 +170,7 @@ export default function CreateBotScreen({ navigation }) {
           <Text style={styles.help}>{personalityHelp}</Text>
 
 <CategoryPicker value={category} onChange={setCategory} disabled={loading} />
-          <AssistantPreferences values={preferences} onChange={setPreferences} disabled={loading} />
+          <AssistantPreferences values={preferences} onChange={setPreferences} disabled={loading} plan={plan} />
           <AssistantErrors errors={fieldErrors} />
 
           {error ? (

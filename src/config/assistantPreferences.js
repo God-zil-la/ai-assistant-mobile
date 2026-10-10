@@ -199,3 +199,27 @@ export const preferencesFor = bot =>
       bot?.[key] ?? fallback,
     ]),
   );
+
+
+// Advanced Customization is available to Premium and Pro.
+export const advancedPreferenceKeys = [
+  'communication_style',
+  'response_structure',
+  'default_language',
+  'proactivity',
+  'custom_instructions',
+];
+
+export const hasAdvancedCustomization = plan =>
+  ['premium', 'pro'].includes(String(plan || '').toLowerCase());
+
+// Keep saved advanced preferences untouched when a user downgrades.
+export const preferencesForPlan = (preferences, plan) => {
+  if (hasAdvancedCustomization(plan)) return { ...preferences };
+
+  return Object.fromEntries(
+    Object.entries(preferences).filter(
+      ([key]) => !advancedPreferenceKeys.includes(key),
+    ),
+  );
+};

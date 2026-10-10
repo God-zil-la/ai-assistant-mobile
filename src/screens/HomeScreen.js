@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 
 import { deleteBot, getBots } from '../services/botService';
+import { getConversations } from '../services/conversationService';
 import {
   clearAuthSession,
   getAuthToken,
@@ -32,9 +33,13 @@ export default function HomeScreen({ navigation, route }) {
   const styles = useThemedStyles(makeStyles);
   const [loggingOut, setLoggingOut] = useState(false);
   const [bots, setBots] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [loadingBots, setLoadingBots] = useState(true);
   const [botsError, setBotsError] = useState('');
   const [deletingBotId, setDeletingBotId] = useState(null);
+  const [mainMenuExpanded, setMainMenuExpanded] = useState(true);
+  const [assistantsExpanded, setAssistantsExpanded] = useState(true);
+  const [expandedBotId, setExpandedBotId] = useState(null);
 
   const [user, setUser] = useState(route.params?.user);
 
@@ -49,10 +54,11 @@ export default function HomeScreen({ navigation, route }) {
         throw new Error('Your session has expired.');
       }
 
-      const [data, profile] = await Promise.all([getBots(token), getCurrentUser(token)]);
+      const [data, profile, chatsResult] = await Promise.all([getBots(token), getCurrentUser(token), getConversations(token).then((data) => ({ data })).catch(() => ({ data: [] }))]);
       setUser(profile);
 
       setBots(Array.isArray(data) ? data : []);
+      setConversations(Array.isArray(chatsResult.data) ? chatsResult.data : []);
     } catch (err) {
       setBotsError(
         err.message || 'Unable to load your assistants.',
@@ -172,18 +178,21 @@ export default function HomeScreen({ navigation, route }) {
             <ThemeControl />
           </View>
 
-          <View style={{ marginBottom: spacing.md }}><CompactGrid>
+          <View style={{ marginBottom: spacing.md }}>
+            <TouchableOpacity onPress={() => setMainMenuExpanded(!mainMenuExpanded)} accessibilityRole="button" accessibilityState={{ expanded: mainMenuExpanded }}><Text style={styles.sectionTitle}>{mainMenuExpanded ? "\u25BC" : "\u25B6"} Main Menu</Text></TouchableOpacity>
+            {mainMenuExpanded && (
+<CompactGrid>
             <ActionButton title="Dashboard" secondary onPress={() => navigation.navigate('Dashboard')} />
             <ActionButton title="Analytics" secondary onPress={() => navigation.navigate('Analytics')} />
             <ActionButton title="Information Guide (PDF)" secondary onPress={() => openLink('guide')} />
-            <ActionButton title="All conversations" secondary onPress={() => navigation.navigate('Conversations')} />
             <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
-          </CompactGrid></View>
+          </CompactGrid>
+)}</View>
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={styles.sectionTitle}>
-                My Assistants
-              </Text>
+              <TouchableOpacity onPress={() => setAssistantsExpanded(!assistantsExpanded)} accessibilityRole="button" accessibilityState={{ expanded: assistantsExpanded }}>
+                <Text style={styles.sectionTitle}>{assistantsExpanded ? "\u25BC" : "\u25B6"} My Assistants</Text>
+              </TouchableOpacity>
 
               {!loadingBots && !botsError ? (
                 <Text style={styles.botCountText}>
@@ -252,20 +261,42 @@ export default function HomeScreen({ navigation, route }) {
             </View>
           ) : null}
 
-          {!loadingBots &&
+          {assistantsExpanded && !loadingBots &&
             !botsError &&
             <CompactGrid columns={1} tabletColumns={2}>{bots.map((bot) => (
               <View
                 key={bot.id}
                 style={styles.botCard}
               >
-                <View style={styles.botHeader}>
+                <TouchableOpacity style={styles.botHeader} activeOpacity={0.8} accessibilityRole="button" accessibilityState={{ expanded: expandedBotId === bot.id }} onPress={() => setExpandedBotId(expandedBotId === bot.id ? null : bot.id)}>
                   <Text style={styles.botName}>
                     {assistantIcon(bot.avatar_icon) ? `${assistantIcon(bot.avatar_icon)} ` : ''}{bot.name}
                   </Text>
 
-                </View>
+                </TouchableOpacity>
 
+                {expandedBotId === bot.id && (
+                  <View style={{ marginTop: 8, gap: 8 }}>
+                    <Text style={styles.botName}>Conversations</Text>
+                    {conversations.filter((chat) => String(chat.bot_id) === String(bot.id)).sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime()).slice(0, 2).map((chat) => (
+                      <TouchableOpacity
+                        key={chat.conversation_id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open ${chat.title || 'Untitled conversation'}`}
+                        onPress={() => navigation.navigate('Chat', {
+                          bot,
+                          conversationId: chat.conversation_id,
+                        })}
+                        style={{ padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.surfaceBorder }}
+                      >
+                        <Text numberOfLines={2} ellipsizeMode="tail" style={{ color: colors.text, flexShrink: 1 }}>{chat.title || 'Untitled conversation'}</Text>
+                      </TouchableOpacity>
+                    ))}
+                    <ActionButton title="All conversations for this assistant" secondary onPress={() => handleOpenConversations(bot)} />
+                  </View>
+                )}
+                {expandedBotId === bot.id && (
+                  <View>
                 {bot.description ? (
                   <Text style={styles.botDescription}>
                     {bot.description}
@@ -283,13 +314,12 @@ export default function HomeScreen({ navigation, route }) {
                   </Text>
                 ) : null}
 
+                  </View>
+                )}
+
+                {expandedBotId === bot.id && (
                 <View style={{ marginTop: 8 }}>
                   <CompactGrid columns={1} tabletColumns={2}>
-                    <ActionButton
-                      title={'\uD83D\uDCAC Chat'}
-                      disabled={deletingBotId === bot.id}
-                      onPress={() => handleOpenConversations(bot)}
-                    />
 
                     <ActionButton
                       title={'\u270F\uFE0F Edit Assistant'}
@@ -345,10 +375,13 @@ export default function HomeScreen({ navigation, route }) {
                     />
                   </CompactGrid>
                 </View>
+                )}
 
+                {expandedBotId === bot.id && (
                 <Text style={styles.botDescription}>
                   Discord setup opens our website and requires browser sign-in.
                 </Text>
+                )}
               </View>
             ))}</CompactGrid>}
 

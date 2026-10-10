@@ -43,7 +43,7 @@ function render(file, web, plan = 'free') {
   const calls = [];
   const bot = { id: 12, name: 'Assistant' };
   const user = { plan, username: 'test' };
-  const states = file === 'screens/HomeScreen.js' ? [false, [bot], false, '', null, user]
+  const states = file === 'screens/HomeScreen.js' ? [false, [bot], [], false, '', null, true, true, bot.id, user]
     : file === 'screens/DashboardScreen.js' ? [{ current_plan: plan }, false, ''] : [];
   const jsx = (type, props) => ({ type, props });
   const modules = {
@@ -53,7 +53,7 @@ function render(file, web, plan = 'free') {
     '@react-navigation/native': { useFocusEffect: () => {} },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../services/externalLinks': { canOpenPurchaseLinks: web, openAccountLink: async key => calls.push(key), openDiscordSetup: async id => calls.push(`discord:${id}`) },
-    '../services/authService': {}, '../services/botService': {}, '../services/tokenService': {}, '../services/parityService': {},
+    '../services/authService': {}, '../services/botService': {}, '../services/tokenService': {}, '../services/parityService': {}, '../services/conversationService': {},
     '../utils/confirm': {}, '../config/assistantPreferences': { assistantIcon: () => '' },
     '../styles/theme': { useTheme: () => ({ colors: {} }), useThemedStyles: () => ({}), radius: {}, spacing: {} },
   };

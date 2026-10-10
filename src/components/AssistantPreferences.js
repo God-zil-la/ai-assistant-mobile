@@ -1,4 +1,4 @@
-
+﻿
 import { useState } from 'react';
 import {
   Modal,
@@ -11,17 +11,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CompactGrid from './CompactGrid';
 import ActionButton from './ActionButton';
-import { preferenceFields } from '../config/assistantPreferences';
+import { preferenceFields, advancedPreferenceKeys, hasAdvancedCustomization } from '../config/assistantPreferences';
 import { useThemedStyles, spacing } from '../styles/theme';
 
 export default function AssistantPreferences({
   values,
   onChange,
   disabled,
+  plan,
 }) {
   const styles = useThemedStyles(makeStyles);
   const [active, setActive] = useState(null);
-  const field = preferenceFields.find(item => item.key === active);
+  const advancedEnabled = hasAdvancedCustomization(plan);
+  const visibleFields = preferenceFields.filter(
+    item => advancedEnabled || !advancedPreferenceKeys.includes(item.key),
+  );
+  const field = visibleFields.find(item => item.key === active);
 
   return (
     <View style={styles.container}>
@@ -30,7 +35,7 @@ export default function AssistantPreferences({
       </Text>
 
       <CompactGrid>
-        {preferenceFields.map(item => (
+        {visibleFields.map(item => (
           <View key={item.key} style={styles.field}>
             <Text style={styles.label}>{item.label}</Text>
 
@@ -51,7 +56,7 @@ export default function AssistantPreferences({
         ))}
       </CompactGrid>
 
-      <View style={styles.field}>
+      {advancedEnabled ? <View style={styles.field}>
         <Text style={styles.label}>
           Custom instructions
         </Text>
@@ -79,7 +84,15 @@ export default function AssistantPreferences({
           accessibilityLabel="Custom instructions"
           autoCapitalize="sentences"
         />
-      </View>
+      </View> : (
+        <View style={styles.field}>
+          <Text style={styles.heading}>Advanced Customization - Premium / Pro</Text>
+          <Text style={styles.help}>
+            Unlock communication style, response structure, fixed response language,
+            proactivity and custom instructions with Premium or Pro.
+          </Text>
+        </View>
+      )}
 
       <Modal
         visible={!!field}
@@ -167,3 +180,4 @@ const makeStyles = colors =>
       color: colors.textMuted,
     },
   });
+
