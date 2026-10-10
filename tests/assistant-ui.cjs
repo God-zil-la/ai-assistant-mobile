@@ -69,10 +69,46 @@ const server = http.createServer((req, res) => {
       await page.getByRole('button', { name: choice, exact: true }).waitFor({ state: 'hidden' });
       await page.locator('[aria-modal="true"]').waitFor({ state: 'hidden' });
     }
+    // U4.1: Select advanced customization preferences before creating.
+    for (const [label, choice] of [
+      ['communication style', 'Formal'],
+      ['response structure', 'Bullet points'],
+      ['default language', 'Swedish'],
+      ['proactivity', 'Proactive'],
+    ]) {
+      await page.getByRole('button', {
+        name: `Choose ${label}`,
+        exact: true,
+      }).click();
+
+      await page.getByRole('button', {
+        name: choice,
+        exact: true,
+      }).click();
+
+      await page.locator('[aria-modal="true"]').waitFor({
+        state: 'hidden',
+      });
+    }
+
+    const customInstructions = 'Svara tydligt p? svenska.\nAnv?nd konkreta exempel.';
+
+    await page.getByRole('textbox', {
+      name: 'Custom instructions',
+      exact: true,
+    }).fill(customInstructions);
+
     await page.getByText('Create Assistant', { exact: true }).last().click();
     await page.getByText('Signed in as U1 tester').waitFor();
     assert.equal(creates, 1);
-    assert.deepEqual(bot, { id: 9, name: 'U1 guide', description: 'Family travel', personality: 'Ask about the budget first.', category: 'general', response_tone: 'professional', response_length: 'detailed', avatar_icon: 'book' });
+    assert.deepEqual(bot, { id: 9, name: 'U1 guide', description: 'Family travel', personality: 'Ask about the budget first.', category: 'general', response_tone: 'professional', response_length: 'detailed', avatar_icon: 'book',
+      knowledge_activation_mode: 'automatic',
+      communication_style: 'formal',
+      response_structure: 'bullet_points',
+      default_language: 'sv',
+      proactivity: 'proactive',
+      custom_instructions: 'Svara tydligt p? svenska.\nAnv?nd konkreta exempel.',
+    });
     await page.getByText('📚 U1 guide', { exact: true }).waitFor();
     await page.getByRole('button', { name: /Edit Assistant$/ }).click();
     assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), bot.personality);
