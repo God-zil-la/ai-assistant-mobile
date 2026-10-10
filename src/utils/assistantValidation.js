@@ -4,6 +4,7 @@ import { preferenceFields } from '../config/assistantPreferences.js';
 export const assistantFieldLabels = {
   name: 'Name', description: 'Description', personality: 'Personality & instructions',
   category: 'Category',
+  custom_instructions: 'Custom instructions',
   ...Object.fromEntries(preferenceFields.map(field => [field.key, field.label])),
 };
 
