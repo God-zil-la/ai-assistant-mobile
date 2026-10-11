@@ -1,4 +1,4 @@
-﻿{
+{
     "expo":  {
                  "name":  "AI Assistant",
                  "slug":  "ai-assistant-mobile",
@@ -16,7 +16,7 @@
                          },
                  "android":  {
                                  "package":  "com.mrhusse.aiassistant",
-                                 "versionCode": 17,
+                                 "versionCode": 18,
                                  "adaptiveIcon":  {
                                                       "backgroundColor":  "#0a0f1f",
                                                       "foregroundImage":  "./assets/android-icon-foreground.png",
