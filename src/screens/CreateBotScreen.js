@@ -44,7 +44,7 @@ export default function CreateBotScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      storeBilling.refresh()
+      (storeBilling ? storeBilling.refresh() : Promise.resolve(null))
         .then(status => {
           if (active) setPlan(status?.effective_plan || 'free');
         })
@@ -73,7 +73,7 @@ export default function CreateBotScreen({ navigation }) {
         throw new Error('Your session has expired.');
       }
 
-      const currentStatus = await storeBilling.refresh();
+      const currentStatus = storeBilling ? await storeBilling.refresh() : null;
       const currentPlan = currentStatus?.effective_plan || 'free';
       await createBot(token, {
         name: name.trim(),
