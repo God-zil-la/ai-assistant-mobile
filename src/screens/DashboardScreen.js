@@ -40,7 +40,7 @@ export default function DashboardScreen({ navigation }) {
           ['AI Assistants', `${data.bot_count} / ${data.bot_limit}`],
           ['Knowledge Base', `${data.knowledge_used_display} / ${data.knowledge_limit_display}`],
           ['Chats', 'Unlimited'],
-          ['Website Widget', data.current_plan === 'pro' ? 'Available' : '?? Pro required'],
+          ['Website Widget', data.current_plan === 'pro' ? 'Available' : '🔒 Pro required'],
         ].map(([label, value]) => <Panel key={label}>
           <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '700' }}>{label}</Text>
           <Text style={{ color: colors.text }}>{value}</Text>
