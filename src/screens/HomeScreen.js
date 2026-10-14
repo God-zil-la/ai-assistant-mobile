@@ -186,6 +186,15 @@ export default function HomeScreen({ navigation, route }) {
             <ActionButton title="Analytics" secondary onPress={() => navigation.navigate('Analytics')} />
             <ActionButton title="Information Guide (PDF)" secondary onPress={() => openLink('guide')} />
             <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
+            <ActionButton
+              title={user?.plan === 'pro' ? 'API Access' : 'API Access - Pro'}
+              secondary
+              onPress={() =>
+                user?.plan === 'pro'
+                  ? navigation.navigate('ApiAccess')
+                  : navigation.navigate('Plans')
+              }
+            />
           </CompactGrid>
 )}</View>
           <View style={styles.sectionHeader}>
@@ -347,7 +356,7 @@ export default function HomeScreen({ navigation, route }) {
                       disabled={deletingBotId === bot.id}
                       onPress={() =>
                         user?.plan === 'pro'
-                          ? openLink(null, bot.id)
+                          ? navigation.navigate('DiscordSetup', { bot })
                           : navigation.navigate('Plans')
                       }
                     />
@@ -379,7 +388,7 @@ export default function HomeScreen({ navigation, route }) {
 
                 {expandedBotId === bot.id && (
                 <Text style={styles.botDescription}>
-                  Discord setup opens our website and requires browser sign-in.
+                  Discord setup is available inside the app.
                 </Text>
                 )}
               </View>

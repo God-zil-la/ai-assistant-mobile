@@ -99,7 +99,9 @@ test('locked native features lead to upgrades; Pro features keep their working d
     if (plan === 'pro') {
       assert.equal(calls[0][0], 'WidgetSettings');
       assert.equal(calls[0][1].plan, plan);
-      assert.equal(calls[1], 'discord:12');
+      assert.equal(calls[1][0], 'DiscordSetup');
+assert.equal(calls[1][1].bot.id, 12);
+assert.equal(calls[1][1].bot.name, 'Assistant');
     } else {
       assert.deepEqual(calls, [['Plans'], ['Plans']]);
     }

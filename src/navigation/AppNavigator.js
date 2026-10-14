@@ -1,3 +1,5 @@
+import DiscordSetupScreen from '../screens/DiscordSetupScreen';
+import ApiAccessScreen from '../screens/ApiAccessScreen';
 import PlansScreen from '../screens/PlansScreen';
 import StorePurchaseObserver from '../components/StorePurchaseObserver';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -107,6 +109,8 @@ export default function AppNavigator() {
           },
         }}
       >
+        <Stack.Screen name="ApiAccess" component={ApiAccessScreen} options={{ title: "API Access" }} />
+        <Stack.Screen name="DiscordSetup" component={DiscordSetupScreen} options={{ title: "Discord Setup" }} />
         <Stack.Screen name="Plans" component={PlansScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="Analytics" component={AnalyticsScreen} />

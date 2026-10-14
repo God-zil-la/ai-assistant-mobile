@@ -13,6 +13,7 @@ export const accountLinks = {
   deleteInformation: `${API_BASE_URL}/delete-account/`,
   terms: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
   privacy: `${API_BASE_URL}/privacy/`,
+  apiAccess: `${API_BASE_URL}/accounts/api-access/`,
   passwordReset: `${API_BASE_URL}/accounts/password-reset/`,
   verification: `${API_BASE_URL}/accounts/resend-verification/`,
   deleteAccount: `${API_BASE_URL}/accounts/delete/`,
