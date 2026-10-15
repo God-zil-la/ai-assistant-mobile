@@ -86,7 +86,7 @@ export default function PlansScreen({ navigation }) {
       {status?.pending_intent ? <Text style={text}>A purchase is awaiting confirmation. Restore purchases or retry the same plan. Contact support if it remains unresolved.</Text> : null}
       {(catalog?.products || [{ plan: 'premium' }, { plan: 'pro' }]).map(item => <Panel key={item.plan}>
         <Text style={{ ...text, fontSize: 21, fontWeight: '700' }}>AI Assistant {item.plan === 'pro' ? 'Pro' : 'Premium'}</Text>
-        <Text style={text}>{item.plan === 'pro' ? 'Higher usage limits, Discord and Website Widget / Public Chatbot. API Access and secure key management in the app.' : 'More AI assistants, monthly messages and Knowledge Base storage.'}</Text>
+        <Text style={text}>{item.plan === 'pro' ? 'Higher usage limits, Discord and Website Widget / Public Chatbot. API Access and secure key management in the app.' : '5 AI assistants, 3,000 AI messages/month, 250 MB Knowledge Base, and a general Discord AI bot on up to 3 servers (shared message limit).'}</Text>
         <Text style={text}>{item.offer ? `${item.offer.price} / month` : 'Store price currently unavailable'}</Text>
         <ActionButton title={`Choose ${item.plan === 'pro' ? 'Pro' : 'Premium'}`}
           disabled={disabled || !signedIn || !catalog?.available || !item.offer || Boolean(status?.purchase_block) ||
