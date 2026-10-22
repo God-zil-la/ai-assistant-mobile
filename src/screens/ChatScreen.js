@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Share,
   StyleSheet,
@@ -18,6 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import ActionButton from '../components/ActionButton';
 import { sendChatMessage } from '../services/chatService';
+import { request } from '../services/apiClient';
+import {
+  getConversationDocumentsEndpoint,
+  getDocumentLinkEndpoint,
+} from '../config/api';
 import {
   getConversation,
   renameConversation,
@@ -44,6 +50,8 @@ export default function ChatScreen({ route, navigation }) {
   const conversationId = route.params?.conversationId;
 
   const [conversation, setConversation] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -72,8 +80,20 @@ export default function ChatScreen({ route, navigation }) {
 
     const data = await getConversation(token, conversationId);
 
+    // DOCUMENT_DOWNLOAD_NATIVE_V1
+    // Keep the existing chat usable if document listing is unavailable.
+    const documentResult = await request(
+      getConversationDocumentsEndpoint(conversationId),
+      { token },
+    ).catch(() => null);
+
     if (mounted.current) {
       setConversation(data);
+      setDocuments(
+        Array.isArray(documentResult?.documents)
+          ? documentResult.documents
+          : [],
+      );
       setRecovery(false);
     }
 
@@ -199,6 +219,39 @@ export default function ChatScreen({ route, navigation }) {
       if (mounted.current) {
         setBusy(false);
       }
+    }
+  }
+
+  async function openSavedDocument(document) {
+    if (!document?.document_id || downloadingId) return;
+
+    setDownloadingId(document.document_id);
+    setError('');
+
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Your session has expired.');
+
+      const result = await request(
+        getDocumentLinkEndpoint(document.document_id),
+        { token },
+      );
+
+      const downloadUrl = result?.download_url;
+      if (
+        typeof downloadUrl !== 'string' ||
+        !downloadUrl.startsWith('https://')
+      ) {
+        throw new Error('Invalid document download address.');
+      }
+
+      await Linking.openURL(downloadUrl);
+    } catch (err) {
+      if (mounted.current) {
+        setError(err.message || 'Unable to open the document.');
+      }
+    } finally {
+      if (mounted.current) setDownloadingId(null);
     }
   }
 
@@ -417,6 +470,25 @@ export default function ChatScreen({ route, navigation }) {
                   }
                 />
 
+                {documents.length > 0 ? (
+                  <View style={styles.editor}>
+                    <Text style={styles.title}>Saved documents</Text>
+                    {documents.map((document) => (
+                      <ActionButton
+                        key={document.document_id}
+                        title={
+                          downloadingId === document.document_id
+                            ? 'Opening document...'
+                            : `Download ${document.filename || document.format || 'document'}`
+                        }
+                        secondary
+                        disabled={Boolean(downloadingId)}
+                        onPress={() => openSavedDocument(document)}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+
                 {notice ? (
                   <Text
                     style={styles.muted}
@@ -469,6 +541,24 @@ export default function ChatScreen({ route, navigation }) {
             renderItem={({ item }) => {
               const user = item.sender === 'user';
 
+              // A saved document is linked to its originating AI reply.
+              const documentMatch = !user && typeof item.message === 'string'
+                ? item.message.match(
+                    /\[Download[^\]]*\]\(\/bots\/api\/documents\/saved\/([0-9a-f-]{36})\/download\/\)/i,
+                  )
+                : null;
+
+              const linkedDocument = documentMatch
+                ? documents.find(
+                    (doc) => String(doc.document_id).toLowerCase() ===
+                      documentMatch[1].toLowerCase(),
+                  )
+                : null;
+
+              const displayMessage = linkedDocument
+                ? item.message.replace(documentMatch[0], '').trim()
+                : item.message;
+
               return (
                 <View
                   style={[
@@ -495,8 +585,21 @@ export default function ChatScreen({ route, navigation }) {
                       styles.message,
                       user && styles.darkText,
                     ]}
-                    message={item.message}
+                    message={displayMessage}
                   />
+
+                  {linkedDocument ? (
+                    <ActionButton
+                      title={
+                        downloadingId === linkedDocument.document_id
+                          ? 'Opening document...'
+                          : `Download ${linkedDocument.filename || linkedDocument.format || 'document'}`
+                      }
+                      secondary
+                      disabled={Boolean(downloadingId)}
+                      onPress={() => openSavedDocument(linkedDocument)}
+                    />
+                  ) : null}
 
                   <Text
                     style={[

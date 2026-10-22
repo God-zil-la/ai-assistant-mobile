@@ -25,3 +25,15 @@ export function getBotChatEndpoint(botId) {
     `${encodeURIComponent(botId)}/chat/`
   );
 }
+
+
+// Authenticated generated-document endpoints.
+export function getConversationDocumentsEndpoint(conversationId) {
+  return `${API_BASE_URL}/bots/api/conversations/` +
+    `${encodeURIComponent(conversationId)}/documents/`;
+}
+
+export function getDocumentLinkEndpoint(documentId) {
+  return `${API_BASE_URL}/bots/api/documents/saved/` +
+    `${encodeURIComponent(documentId)}/link/`;
+}
