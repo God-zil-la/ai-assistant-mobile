@@ -59,7 +59,7 @@ export default function AccountScreen({ navigation, route }) {
       </View>
       <ActionButton title="Upgrade / Manage Plan" secondary onPress={() => navigation.navigate('Plans')} />
       <Text style={styles.body}>Choose a plan, restore purchases or manage your current subscription.</Text>
-      <CompactGrid><ActionButton title="Information Guide (PDF)" secondary onPress={() => open('guide')} />
+      <CompactGrid><ActionButton title="Download Complete User Guide (PDF)" secondary onPress={() => open('guide')} />
       <ActionButton title="Resend verification email" secondary onPress={() => open('verification')} />
       </CompactGrid>
       <Text style={styles.heading}>Privacy & Support</Text>

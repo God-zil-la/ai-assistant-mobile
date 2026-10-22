@@ -184,7 +184,7 @@ export default function HomeScreen({ navigation, route }) {
 <CompactGrid>
             <ActionButton title="Dashboard" secondary onPress={() => navigation.navigate('Dashboard')} />
             <ActionButton title="Analytics" secondary onPress={() => navigation.navigate('Analytics')} />
-            <ActionButton title="Information Guide (PDF)" secondary onPress={() => openLink('guide')} />
+            <ActionButton title="Download Complete User Guide (PDF)" secondary onPress={() => openLink('guide')} />
             <ActionButton title="Account & Help" secondary onPress={() => navigation.navigate('Account', { user })} />
           </CompactGrid>
 )}</View>

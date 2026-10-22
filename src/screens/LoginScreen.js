@@ -118,6 +118,7 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
           <View style={{ gap: spacing.md, marginTop: spacing.xl }}>
+            <ActionButton title="Download Complete User Guide (PDF)" secondary onPress={() => openHelp("guide")} />
             <ActionButton title="Forgot password?" secondary onPress={() => openHelp('passwordReset')} />
             <ActionButton title="Resend verification email" secondary onPress={() => openHelp('verification')} />
           </View>

@@ -163,6 +163,7 @@ export default function RegisterScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
             <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+              <ActionButton title="Download Complete User Guide (PDF)" secondary onPress={() => openHelp("guide")} />
               <ActionButton title="Privacy policy" secondary onPress={() => openHelp('privacy')} />
               {success ? <>
                 <ActionButton title="Continue to sign in" onPress={() => navigation.replace('Login')} />

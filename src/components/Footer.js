@@ -16,6 +16,6 @@ export default function Footer() {
     <ActionButton title="Delete account information" secondary onPress={() => open('deleteInformation')} />
     </CompactGrid>
     {error ? <Text accessibilityRole="alert" style={{ color: colors.error }}>{error}</Text> : null}
-    <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 12 }}>© {new Date().getFullYear()} AI Assistant. All rights reserved.</Text>
+    <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 12 }}>© {new Date().getFullYear()} My AI Assistant Studio. All rights reserved.</Text>
   </View>;
 }

@@ -1,3 +1,4 @@
+import { openAccountLink } from '../services/externalLinks';
 import { ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Panel from '../components/Panel';
@@ -22,6 +23,7 @@ export default function WelcomeScreen({ navigation }) {
         ['Keep unlimited conversations', 'Start separate conversations and return to your chat history whenever you need it.'],
         ['Understand your AI usage', 'View usage and conversation analytics to understand how your assistants are being used.'],
       ].map(([title, description]) => <Panel key={title}><Text style={{ color: colors.primary, fontSize: 20, fontWeight: '700' }}>{title}</Text><Text style={{ color: colors.text, lineHeight: 24 }}>{description}</Text></Panel>)}
+      <ActionButton title="Download Complete User Guide (PDF)" secondary onPress={() => openAccountLink("guide").catch(console.error)} />
       <ActionButton title="Plans & Pricing" secondary onPress={() => navigation.navigate('Plans')} />
       <Footer />
     </ScrollView>
