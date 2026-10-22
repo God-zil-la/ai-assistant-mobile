@@ -28,7 +28,7 @@ import {
   getConversation,
   renameConversation,
 } from '../services/conversationService';
-import { getAuthToken } from '../services/tokenService';
+import { getAuthToken, getStoredUsername } from '../services/tokenService';
 import {
   conversationTranscript,
   formatDate,
@@ -48,6 +48,17 @@ export default function ChatScreen({ route, navigation }) {
 
   const bot = route.params?.bot;
   const conversationId = route.params?.conversationId;
+
+  const [username, setUsername] = useState('');
+  useEffect(() => {
+    let active = true;
+    getStoredUsername()
+      .then((name) => {
+        if (active) setUsername(typeof name === 'string' ? name.trim() : '');
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   const [conversation, setConversation] = useState(null);
   const [documents, setDocuments] = useState([]);
@@ -575,7 +586,7 @@ export default function ChatScreen({ route, navigation }) {
                     ]}
                   >
                     {user
-                      ? (conversation?.is_widget ? 'Visitor' : 'You')
+                      ? (conversation?.is_widget ? 'Visitor' : (username || 'You'))
                       : conversation.bot_name ||
                         'Assistant'}
                   </Text>
