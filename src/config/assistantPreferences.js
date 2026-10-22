@@ -136,11 +136,70 @@ export const preferenceFields = [
     label: 'Assistant icon',
     help: 'Shown in your assistant list and chat. This does not change its replies.',
     options: [
-      { value: 'default', label: 'None (current appearance)' },
-      { value: 'robot', label: '🤖 Robot' },
-      { value: 'sparkles', label: '✨ Sparkles' },
-      { value: 'book', label: '📚 Books' },
-      { value: 'briefcase', label: '💼 Briefcase' },
+  { value: 'default', label: 'None (current appearance)' },
+  { value: 'robot', label: '🤖 Robot' },
+  { value: 'sparkles', label: '✨ Sparkles' },
+  { value: 'book', label: '📚 Books' },
+  { value: 'briefcase', label: '💼 Briefcase' },
+
+  { value: 'art', label: '🎨 Art' },
+  { value: 'business', label: '🏢 Business' },
+  { value: 'career', label: '🎯 Career' },
+  { value: 'community', label: '👥 Community' },
+  { value: 'culture', label: '🎭 Culture' },
+  { value: 'affairs', label: '🌍 Current Affairs' },
+  { value: 'education', label: '🎓 Education' },
+  { value: 'startup', label: '🚀 Entrepreneurship' },
+  { value: 'entertain', label: '🍿 Entertainment' },
+  { value: 'environ', label: '🌳 Environment' },
+  { value: 'events', label: '🎉 Events' },
+  { value: 'fashion', label: '👗 Fashion' },
+  { value: 'finance', label: '💰 Finance' },
+  { value: 'fitness', label: '🏋️ Fitness' },
+  { value: 'food', label: '🍳 Food' },
+  { value: 'funny', label: '😂 Funny' },
+  { value: 'gaming', label: '🎮 Gaming' },
+  { value: 'garden', label: '🌱 Gardening' },
+  { value: 'general', label: '💬 General' },
+  { value: 'hobbies', label: '🧩 Hobbies' },
+  { value: 'history', label: '🏛️ History' },
+  { value: 'home', label: '🏠 Home Improvement' },
+  { value: 'innovate', label: '💡 Innovation' },
+  { value: 'interview', label: '🤝 Interview Preparation' },
+  { value: 'jobsearch', label: '🔎 Job Search' },
+  { value: 'language', label: '🗣️ Language' },
+  { value: 'leader', label: '👑 Leadership' },
+  { value: 'lifestyle', label: '🌞 Lifestyle' },
+  { value: 'local', label: '📍 Local' },
+  { value: 'manage', label: '📋 Management' },
+  { value: 'marketing', label: '📣 Marketing' },
+  { value: 'mental', label: '🧠 Mental Health' },
+  { value: 'music', label: '🎵 Music' },
+  { value: 'news', label: '📰 News' },
+  { value: 'other', label: '⭐ Other' },
+  { value: 'parenting', label: '👶 Parenting' },
+  { value: 'pets', label: '🐾 Pets' },
+  { value: 'philos', label: '🤔 Philosophy' },
+  { value: 'politics', label: '🗳️ Politics' },
+  { value: 'product', label: '⚡ Productivity' },
+  { value: 'relation', label: '❤️ Relationships' },
+  { value: 'resume', label: '📄 Resume Building' },
+  { value: 'sales', label: '📈 Sales' },
+  { value: 'science', label: '🔬 Science' },
+  { value: 'self', label: '🌟 Self Improvement' },
+  { value: 'shopping', label: '🛍️ Shopping' },
+  { value: 'society', label: '🌐 Society' },
+  { value: 'spirit', label: '🕊️ Spirituality' },
+  { value: 'sports', label: '🏆 Sports' },
+  { value: 'support', label: '🎧 Support' },
+  { value: 'sustain', label: '♻️ Sustainability' },
+  { value: 'tech', label: '💻 Tech' },
+  { value: 'technol', label: '⚙️ Technology' },
+  { value: 'therapy', label: '🫂 Therapy' },
+  { value: 'travel', label: '✈️ Travel' },
+  { value: 'wellbeing', label: '🌻 Wellbeing' },
+  { value: 'wellness', label: '🧘 Wellness' },
+  { value: 'print3d', label: '🖨️ 3-D Printing' },
     ],
   },
   {
@@ -185,12 +244,23 @@ export const preferenceFields = [
   },
 ];
 
-export const assistantIcon = value => ({
-  robot: '🤖',
-  sparkles: '✨',
-  book: '📚',
-  briefcase: '💼',
-}[value] || '');
+
+export const assistantIcon = value => {
+  const iconPreference = preferenceFields.find(
+    field => field.key === 'avatar_icon',
+  );
+
+  const option = iconPreference?.options.find(
+    item => item.value === value,
+  );
+
+  if (!option || value === 'default') {
+    return '';
+  }
+
+  return option.label.split(' ')[0];
+};
+
 
 export const preferencesFor = bot =>
   Object.fromEntries(
