@@ -53,7 +53,7 @@ export default function EditBotScreen({
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      storeBilling.refresh()
+      (storeBilling ? storeBilling.refresh() : Promise.resolve(null))
         .then(status => {
           if (active) setPlan(status?.effective_plan || 'free');
         })
@@ -72,7 +72,7 @@ export default function EditBotScreen({
       return;
     }
 
-    const errors = validateAssistant({ name, description, personality, category, ...preferencesForPlan(preferences, plan) });
+    const errors = validateAssistant({ name, description, personality, category, ...preferences });
     setFieldErrors(errors);
     if (Object.keys(errors).length) {
       return;
@@ -87,7 +87,7 @@ export default function EditBotScreen({
         throw new Error('Your session has expired.');
       }
 
-      const currentStatus = await storeBilling.refresh();
+      const currentStatus = storeBilling ? await (storeBilling ? storeBilling.refresh() : Promise.resolve(null)) : null;
       const currentPlan = currentStatus?.effective_plan || 'free';
 
       await updateBot(

@@ -58,7 +58,7 @@ export default function CreateBotScreen({ navigation }) {
   async function handleCreate() {
     setError('');
 
-    const errors = validateAssistant({ name, description, personality, category, ...preferencesForPlan(preferences, plan) });
+    const errors = validateAssistant({ name, description, personality, category, ...preferences });
     setFieldErrors(errors);
     if (Object.keys(errors).length) {
       return;

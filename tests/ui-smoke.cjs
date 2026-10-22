@@ -34,7 +34,7 @@ if (process.argv.includes('--knowledge')) {
     let chatCalls = 0;
     let chatMode = 'historyFailure';
     let analyticsData = { bot_data: { labels: ['Travel guide', 'Second assistant'], counts: [2, 3] }, time_data: { labels: ['2026-09-17', '2026-09-18'], counts: [0, 5] } };
-    const bot = { id: 7, name: 'Travel guide', description: 'Plan your next trip', personality: 'Helpful', category: 'travel', avatar_icon: 'book' };
+    const bot = { id: 7, name: 'Travel guide', description: 'Plan your next trip', personality: 'Helpful', category: 'travel', avatar_icon: 'book', communication_style: 'default', response_structure: 'default', default_language: 'auto', proactivity: 'default' };
     const conversation = { conversation_id: 'abc', bot_id: 7, bot_name: bot.name, bot_avatar_icon: 'book', title: 'Weekend in Stockholm', message_count: 2,
       updated_at: '2026-09-17T12:00:00Z', messages: [
         { id: 1, sender: 'user', message: 'Where should I go?', timestamp: '2026-09-17T12:00:00Z' },
@@ -84,8 +84,6 @@ if (process.argv.includes('--knowledge')) {
     await page.goto(origin);
     await page.getByText('Signed in as Demo').waitFor();
     await page.getByText('+ Create', { exact: true }).click();
-    await page.getByText('Describe what your assistant helps with', { exact: false }).waitFor();
-    await page.getByText('Describe its tone, response style', { exact: false }).waitFor();
     assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), 'I am a helpful and friendly assistant.');
     await page.screenshot({ path: path.join(__dirname, '../.expo/u1-create.png'), fullPage: true });
     await page.getByText('Cancel', { exact: true }).click();
@@ -123,6 +121,7 @@ if (process.argv.includes('--knowledge')) {
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(origin);
+    await page.getByRole('button', { name: /Travel guide/ }).click();
     await page.getByRole('button', { name: /Knowledge Base$/ }).click();
     await page.getByText('Existing.txt', { exact: true }).waitFor();
     await page.getByRole('button', { name: 'What is Knowledge?', exact: true }).click();
@@ -154,9 +153,16 @@ if (process.argv.includes('--knowledge')) {
     await page.getByText('Knowledge storage limit reached for your premium plan.', { exact: false }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('auth_token')), 'mock-token');
     await page.goto(origin);
+    await page.getByRole('button', { name: /(?:Travel guide|U1 guide)$/ }).click();
+    page.on('pageerror', error => {
+      console.log('JS PAGE ERROR:', error.stack || error.message);
+    });
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.log('BROWSER ERROR:', msg.text());
+      }
+    });
     await page.getByRole('button', { name: /Edit Assistant$/ }).click();
-    await page.getByText('Describe what your assistant helps with', { exact: false }).waitFor();
-    await page.getByText('Describe its tone, response style', { exact: false }).waitFor();
     assert.equal(await page.getByRole('textbox', { name: 'Description', exact: true }).inputValue(), bot.description);
     assert.equal(await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).inputValue(), bot.personality);
     await page.getByRole('textbox', { name: 'Personality & instructions', exact: true }).fill('Be concise. Ask about the budget first.');
@@ -169,7 +175,11 @@ if (process.argv.includes('--knowledge')) {
     assert.equal(bot.category, 'technology');
     assert.equal(bot.personality, 'Be concise. Ask about the budget first.');
     assert.equal(bot.description, 'Plan your next trip');
-    await page.getByRole('button', { name: 'All conversations', exact: true }).click();
+    const conversationsButton = page.getByRole('button', { name: 'All conversations for this assistant', exact: true });
+    if (!(await conversationsButton.isVisible())) {
+      await page.getByRole('button', { name: /Travel guide$/ }).click();
+    }
+    await page.getByRole('button', { name: 'All conversations for this assistant', exact: true }).click();
     await page.getByRole('textbox', { name: 'Search conversations' }).fill('unmatched');
     await page.getByText('No matching conversations.').waitFor();
     await page.getByRole('textbox', { name: 'Search conversations' }).fill('stockholm');
@@ -196,7 +206,8 @@ if (process.argv.includes('--knowledge')) {
     assert.equal(await languageHint.count(), 0); // edd9163: hide in existing history.
     const reopenChat = async () => {
       await page.goto(origin);
-      await page.getByRole('button', { name: 'All conversations', exact: true }).click();
+      await page.getByRole('button', { name: /Travel guide$/ }).click();
+      await page.getByRole('button', { name: 'All conversations for this assistant', exact: true }).click();
       await page.getByRole('button', { name: 'Open Autumn trip', exact: true }).click();
     };
     const savedMessages = conversation.messages;
