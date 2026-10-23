@@ -9,7 +9,10 @@ export default function StorePurchaseObserver() {
     let queue = Promise.resolve();
     const recover = () => {
       queue = queue.then(async () => {
-        if (active && storeBilling && await getAuthToken()) await storeBilling.restore(false);
+        if (!active || !storeBilling) return;
+        const token = await getAuthToken();
+        if (!active || !token) return;
+        await storeBilling.restore(false);
       }).catch(() => {
         // Billing retains account-scoped errors for the next visit to Plans.
       });

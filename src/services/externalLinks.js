@@ -20,6 +20,10 @@ export const accountLinks = {
 };
 
 export async function openAccountLink(key) {
+  if (!Object.prototype.hasOwnProperty.call(accountLinks, key) ||
+      typeof accountLinks[key] !== 'string' || !accountLinks[key].trim()) {
+    throw new Error('Invalid account link.');
+  }
   if (!canOpenPurchaseLinks && ['billing', 'plans', 'website'].includes(key)) {
     throw new Error('Use Plans in the app to manage store purchases. Contact support for website billing help.');
   }

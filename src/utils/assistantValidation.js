@@ -23,6 +23,6 @@ export function validateAssistant(values) {
 export function assistantApiErrors(error) {
   if (error.status !== 400 || !error.data || typeof error.data !== 'object') return {};
   return Object.fromEntries(Object.entries(error.data)
-    .filter(([field]) => field in assistantFieldLabels)
+    .filter(([field]) => Object.prototype.hasOwnProperty.call(assistantFieldLabels, field))
     .map(([field, messages]) => [field, Array.isArray(messages) ? messages.join(' ') : String(messages)]));
 }
