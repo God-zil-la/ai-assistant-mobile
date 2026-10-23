@@ -101,7 +101,7 @@ test('locked native features lead to upgrades; Pro features keep their working d
       assert.equal(calls[0][1].plan, plan);
       assert.equal(calls[1], 'discord:12');
     } else {
-      assert.deepEqual(calls, [['Plans'], ['Plans']]);
+      assert.deepEqual(calls, plan === 'premium' ? [['Plans'], 'discord:12'] : [['Plans'], ['Plans']]);
     }
   }
   const web = render('screens/HomeScreen.js', true);

@@ -339,14 +339,14 @@ export default function HomeScreen({ navigation, route }) {
 
                     <ActionButton
                       title={
-                        user?.plan === 'pro'
+                        ['premium', 'pro'].includes(user?.plan)
                           ? '\uD83C\uDFAE Discord Setup'
-                          : '\uD83D\uDD12 Discord - Pro'
+                          : '\uD83D\uDD12 Discord - Premium'
                       }
                       secondary
                       disabled={deletingBotId === bot.id}
                       onPress={() =>
-                        user?.plan === 'pro'
+                        ['premium', 'pro'].includes(user?.plan)
                           ? openLink(null, bot.id)
                           : navigation.navigate('Plans')
                       }
