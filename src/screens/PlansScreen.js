@@ -38,11 +38,11 @@ export default function PlansScreen({ navigation }) {
         setCatalog(null); setStatus(null); setMessage('');
       }
       setSignedIn(Boolean(token));
-      if (!token || !storeBilling) return;
+      if (!storeBilling || (!token && Platform.OS !== 'ios')) return;
       const result = await storeBilling.catalog();
       if (!current() || await getAuthToken() !== token) return;
       setCatalog(result);
-      if (statusRevision.current === revision) setStatus(result);
+      if (statusRevision.current === revision) setStatus(token ? result : null);
     } catch (err) { if (current()) setError(err.message); }
     finally { if (current()) setBusy(false); }
   }, []);

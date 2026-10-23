@@ -70,7 +70,17 @@ function plansFixture(platform = 'ios') {
   let token = 'account-a';
   const result = { effective_plan: 'free', available: true, products: [{ plan: 'pro', product_id: 'pro', offer: { price: '$1', token: 'offer' } }] };
   const calls = [];
-  const billing = { catalog: async () => result, subscribe: fn => { subscriber = fn; return () => {}; },
+  const billing = { catalog: async () => {
+    if (platform === 'ios' && !token) {
+      return {
+        available: true,
+        products: result.products.map(({ plan, product_id, offer }) => ({
+          plan, product_id, offer,
+        })),
+      };
+    }
+    return result;
+  }, subscribe: fn => { subscriber = fn; return () => {}; },
     purchase: async () => { calls.push('purchase'); }, restore: async () => {}, manage: async () => {}, refresh: async () => {} };
   const jsx = (type, props) => ({ type, props });
   const modules = {
@@ -126,14 +136,40 @@ test('late catalog and purchase events cannot show A subscription after B signs 
   f.unmount();
 });
 
-test('sign-out clears catalog and disables purchases on foreground', async () => {
-  const f = plansFixture(); f.mount(); await flush();
+test('iOS sign-out retains public prices but clears account status and disables purchases', async () => {
+  const f = plansFixture('ios');
+  f.mount();
+  await flush();
+
   assert.equal(f.button('Choose Pro').disabled, false);
-  f.setToken(null); f.foreground(); await flush();
+
+  f.setToken(null);
+  f.foreground();
+  await flush();
+
+  assert.equal(f.states[1], null);
+  assert.equal(f.states[0]?.products?.[0]?.offer?.price, '$1');
+  assert.equal(f.button('Choose Pro').disabled, true);
+  assert.equal(f.button('Restore purchases').disabled, true);
+  assert.ok(f.button('Sign in to choose a plan'));
+
+  f.unmount();
+});
+
+test('Android sign-out clears catalog and disables purchases', async () => {
+  const f = plansFixture('android');
+  f.mount();
+  await flush();
+
+  f.setToken(null);
+  f.foreground();
+  await flush();
+
   assert.equal(f.states[0], null);
   assert.equal(f.states[1], null);
   assert.equal(f.button('Choose Pro').disabled, true);
   assert.equal(f.button('Restore purchases').disabled, true);
+
   f.unmount();
 });
 

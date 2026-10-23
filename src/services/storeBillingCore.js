@@ -139,7 +139,33 @@ export function createStoreBilling({ adapter, api, getToken, provider }) {
       return () => observers.delete(fn);
     },
     async catalog() {
-      const token = await tokenNow();
+      const token = await getToken();
+      if (!token && provider === 'apple') {
+        await connect();
+        const items = [
+          { plan: 'premium', product_id: 'com.mrhusse.aiassistant.premium.monthly' },
+          { plan: 'pro', product_id: 'com.mrhusse.aiassistant.pro.monthly' },
+        ];
+        const products = await adapter.fetchProducts({
+          skus: items.map(item => item.product_id),
+          type: 'subs',
+        });
+        if (await getToken() !== token) {
+          throw new Error('Your account changed. Please refresh plans.');
+        }
+        return {
+          available: true,
+          products: items.map(item => ({
+            ...item,
+            offer: offerFor(
+              products.find(product => product.id === item.product_id),
+              item,
+              provider
+            ),
+          })),
+        };
+      }
+      if (!token) return tokenNow();
       const catalog = await api(`catalog?provider=${provider}`, undefined, token);
       await sameSession(token);
       if (!Array.isArray(catalog?.products)) throw new Error('The store catalog is unavailable. Please try again.');
